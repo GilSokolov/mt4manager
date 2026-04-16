@@ -1,0 +1,58 @@
+import { EventEmitter } from "events";
+import { loadBinding } from "./utils/paths";
+import { PumpingService } from "./services/pumping";
+import { TradesService } from "./services/trades";
+import { UsersService } from "./services/users";
+
+const nativeBinding = loadBinding();
+
+type NativeManager = {
+  connect(server: string): Promise<void>;
+  login(login: number, password: string): Promise<void>;
+  disconnect(): Promise<void>;
+  close(): Promise<void>;
+};
+
+export default class MT4Manager {
+  private readonly native: NativeManager;
+  public readonly users: UsersService;
+  public readonly trades: TradesService;
+  private pumpInstance?: PumpingService;
+
+  constructor(dllPath: string) {
+    this.native = new nativeBinding.MT4Manager(dllPath) as NativeManager;
+    this.users = new UsersService(this.native);
+    this.trades = new TradesService(this.native);
+  }
+
+  async connect(server: string): Promise<void> {
+    return this.native.connect(server);
+  }
+
+  async login(login: number, password: string): Promise<void> {
+    return this.native.login(login, password);
+  }
+
+  async disconnect(): Promise<void> {
+    return this.native.disconnect();
+  }
+
+  async close(): Promise<void> {
+    if (this.pumpInstance) {
+      this.pumpInstance.removeAllListeners();
+      this.pumpInstance = undefined;
+    }
+    return this.native.close();
+  }
+
+  pumping(): PumpingService {
+    if (!this.pumpInstance) {
+      this.pumpInstance = new PumpingService(
+        this.native as unknown as EventEmitter,
+      );
+    }
+    return this.pumpInstance;
+  }
+}
+
+export { MT4Manager };

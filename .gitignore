@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+*.log
+npm-debug.log*
+.yarn/
+coverage/
+.DS_Store
+*.tgz

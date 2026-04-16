@@ -1,0 +1,54 @@
+{
+  "name": "mt4manager",
+  "version": "0.1.0",
+  "description": "Node.js native addon starter for MetaTrader 4 Manager API",
+  "keywords": [
+    "mt4",
+    "metatrader4",
+    "manager-api",
+    "node-addon",
+    "napi"
+  ],
+  "homepage": "https://github.com/your-org/mt4manager",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/mt4manager.git"
+  },
+  "license": "MIT",
+  "author": "Your Name",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "build/Release/*.node",
+    "binding.gyp",
+    "include",
+    "native",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true}); require('fs').rmSync('build',{recursive:true,force:true});\"",
+    "build:ts": "tsc -p tsconfig.json",
+    "build:native": "node-gyp rebuild",
+    "build": "npm run build:ts && npm run build:native",
+    "rebuild": "npm run clean && npm run build",
+    "test": "npm run build:ts && node --test dist/test/**/*.test.js",
+    "pack:check": "npm pack --dry-run",
+    "prepublishOnly": "npm run build && node scripts/verify-package.js"
+  },
+  "dependencies": {
+    "bindings": "^1.5.0",
+    "node-addon-api": "^8.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.17",
+    "node-gyp": "^11.2.0",
+    "typescript": "^5.8.3"
+  },
+  "gypfile": true
+}
