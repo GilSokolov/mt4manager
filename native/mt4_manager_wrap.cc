@@ -6,21 +6,13 @@
 
 #include "./utils/napi_utils.h"
 
-#include <iostream>
+#include "./utils/async_utils.h"
 
 Napi::FunctionReference MT4ManagerWrap::constructor;
 
-namespace
-{
-  std::string Utf8ToWide(const std::string &value)
-  {
-    return std::string(value.begin(), value.end());
-  }
-} // namespace
-
 Napi::Object MT4ManagerWrap::Init(Napi::Env env, Napi::Object exports)
 {
-  Napi::Function func = DefineClass(
+  Napi::Function klass = DefineClass(
       env,
       "MT4Manager",
       {
@@ -30,39 +22,31 @@ Napi::Object MT4ManagerWrap::Init(Napi::Env env, Napi::Object exports)
           InstanceMethod("close", &MT4ManagerWrap::Close),
       });
 
-  constructor = Napi::Persistent(func);
+  constructor = Napi::Persistent(klass);
   constructor.SuppressDestruct();
 
-  exports.Set("MT4Manager", func);
+  exports.Set("MT4Manager", klass);
   return exports;
 }
 
 MT4ManagerWrap::MT4ManagerWrap(const Napi::CallbackInfo &info)
     : Napi::ObjectWrap<MT4ManagerWrap>(info)
 {
-  std::cerr << "[mt4] wrap ctor start" << std::endl;
-
   Napi::Env env = info.Env();
 
-  if (info.Length() < 1 || !info[0].IsString())
+  const std::string dllPath = napi_utils::GetString(info, 0, "dllPath");
+
+  if (napi_utils::HasPendingException(env))
   {
-    Napi::TypeError::New(env, "Expected (dllPath: string)")
-        .ThrowAsJavaScriptException();
     return;
   }
 
-  const std::string dllPathUtf8 = info[0].As<Napi::String>().Utf8Value();
-  std::cerr << "[mt4] got dll path string" << std::endl;
-
   try
   {
-    std::string dllPath(dllPathUtf8.begin(), dllPathUtf8.end());
     client_ = std::make_shared<MT4Client>(dllPath);
-    std::cerr << "[mt4] client created" << std::endl;
   }
   catch (const std::exception &ex)
   {
-    std::cerr << "[mt4] wrap ctor exception: " << ex.what() << std::endl;
     Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
   }
 }
@@ -78,24 +62,22 @@ MT4ManagerWrap::~MT4ManagerWrap()
 Napi::Value MT4ManagerWrap::Connect(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
-  if (info.Length() < 1 || !info[0].IsString())
+
+  const std::string server = napi_utils::GetString(info, 0, "server");
+
+  if (napi_utils::HasPendingException(env))
   {
-    throw Napi::TypeError::New(env, "server string is required");
+    return env.Null();
   }
 
-  std::string server = info[0].As<Napi::String>().Utf8Value();
-  auto deferred = Napi::Promise::Deferred::New(env);
-  auto client = client_;
+  std::shared_ptr<MT4Client> client = client_;
 
-  auto *job = new AsyncJob(
-      env,
-      "MT4Manager::connect",
-      [client, server]()
-      { client->Connect(server); },
-      deferred);
-  job->Queue();
+  auto task = [client, server]()
+  {
+    client->Connect(server);
+  };
 
-  return deferred.Promise();
+  return async_utils::QueuePromise(env, "MT4Manager::connect", task);
 }
 
 Napi::Value MT4ManagerWrap::Login(const Napi::CallbackInfo &info)
@@ -110,50 +92,40 @@ Napi::Value MT4ManagerWrap::Login(const Napi::CallbackInfo &info)
     return env.Null();
   }
 
-  auto deferred = Napi::Promise::Deferred::New(env);
-  auto client = client_;
+  std::shared_ptr<MT4Client> client = client_;
 
-  auto *job = new AsyncJob(
-      env,
-      "MT4Manager::login",
-      [client, login, password]()
-      { client->Login(login, password); },
-      deferred);
-  job->Queue();
+  auto task = [client, login, password]()
+  {
+    client->Login(login, password);
+  };
 
-  return deferred.Promise();
+  return async_utils::QueuePromise(env, "MT4Manager::login", task);
 }
 
 Napi::Value MT4ManagerWrap::Disconnect(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
-  auto deferred = Napi::Promise::Deferred::New(env);
-  auto client = client_;
 
-  auto *job = new AsyncJob(
-      env,
-      "MT4Manager::disconnect",
-      [client]()
-      { client->Disconnect(); },
-      deferred);
-  job->Queue();
+  std::shared_ptr<MT4Client> client = client_;
 
-  return deferred.Promise();
+  auto task = [client]()
+  {
+    client->Disconnect();
+  };
+
+  return async_utils::QueuePromise(env, "MT4Manager::disconnect", task);
 }
 
 Napi::Value MT4ManagerWrap::Close(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
-  auto deferred = Napi::Promise::Deferred::New(env);
-  auto client = client_;
 
-  auto *job = new AsyncJob(
-      env,
-      "MT4Manager::close",
-      [client]()
-      { client->Close(); },
-      deferred);
-  job->Queue();
+  std::shared_ptr<MT4Client> client = client_;
 
-  return deferred.Promise();
+  auto task = [client]()
+  {
+    client->Close();
+  };
+
+  return async_utils::QueuePromise(env, "MT4Manager::close", task);
 }
