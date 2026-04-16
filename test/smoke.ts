@@ -1,37 +1,22 @@
-import path from "node:path";
 import MT4Manager from "../src";
+import { config } from "./config";
 
 async function main() {
-  const dllPath = path.resolve("dll", "mtmanapi64.dll");
-  console.log("dllPath =", dllPath);
+  const manager = new MT4Manager(config.dllPath);
 
-  console.log("before constructor");
+  console.log("[mt4] connecting...");
+  await manager.connect(config.server);
+  console.log("connected");
 
-  let manager: MT4Manager;
-  try {
-    manager = new MT4Manager(dllPath);
-    console.log("after constructor");
-  } catch (error) {
-    console.error("constructor threw:", error);
-    process.exit(1);
-    return;
-  }
+  console.log("[mt4] logging in...");
+  await manager.login(config.login, config.password);
+  console.log("logged in");
 
-  try {
-    console.log("before connect");
-    await manager.connect("mt2.leverate.com:443");
-    console.log("after connect");
-
-    console.log("before close");
-    await manager.close();
-    console.log("after close");
-  } catch (error) {
-    console.error("runtime failed:", error);
-    process.exit(1);
-  }
+  await manager.close();
+  console.log("closed");
 }
 
 main().catch((error) => {
-  console.error("main failed:", error);
+  console.error(error);
   process.exit(1);
 });
