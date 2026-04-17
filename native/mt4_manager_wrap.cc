@@ -8,10 +8,14 @@
 
 #include "./utils/async_utils.h"
 
+#include "users/mt4_users_wrap.h"
+
 Napi::FunctionReference MT4ManagerWrap::constructor;
 
 Napi::Object MT4ManagerWrap::Init(Napi::Env env, Napi::Object exports)
 {
+  MT4UsersWrap::Init(env);
+
   Napi::Function klass = DefineClass(
       env,
       "MT4Manager",
@@ -44,6 +48,10 @@ MT4ManagerWrap::MT4ManagerWrap(const Napi::CallbackInfo &info)
   try
   {
     client_ = std::make_shared<MT4Client>(dllPath);
+    Napi::Object users = MT4UsersWrap::NewInstance(env, client_);
+    users_ = Napi::Persistent(users);
+    users_.SuppressDestruct();
+    Value().Set("users", users);
   }
   catch (const std::exception &ex)
   {

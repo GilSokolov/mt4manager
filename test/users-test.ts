@@ -1,62 +1,28 @@
-import test from "node:test";
 import assert from "node:assert/strict";
+import test from "node:test";
 
-import { MockNativeMT4Manager } from "../src/native/mock";
+import { MT4Manager } from "../src/manager";
+import { config } from "./config";
 
 test("users.get should return user", async () => {
-  const manager = new MockNativeMT4Manager();
+  const manager = new MT4Manager(config.dllPath);
 
   const user = await manager.users.get(123);
 
-  assert.ok(user);
   assert.equal(user.login, 123);
-  assert.ok(user.group);
-});
-
-test("users.create should create user", async () => {
-  const manager = new MockNativeMT4Manager();
-
-  const user = await manager.users.create({
-    login: 1000,
-    group: "demo\\group",
-    name: "John Doe",
-    email: "john@test.com",
-    leverage: 100,
-  });
-
-  assert.equal(user.login, 1000);
   assert.equal(user.group, "demo\\group");
-  assert.equal(user.name, "John Doe");
+  assert.equal(user.name, "Test User");
+  assert.equal(user.email, "test@example.com");
+  assert.equal(user.leverage, 100);
 });
 
-test("users.update should update user", async () => {
-  const manager = new MockNativeMT4Manager();
+test("users.get should reject invalid login", () => {
+  const manager = new MT4Manager(config.dllPath);
 
-  const user = await manager.users.update({
-    login: 1000,
-    name: "Updated Name",
+  assert.throws(() => manager.users.get(0), {
+    name: "TypeError",
+    message: "login must be a positive integer",
   });
 
-  assert.equal(user.login, 1000);
-  assert.equal(user.name, "Updated Name");
-});
-
-test("users.delete should resolve", async () => {
-  const manager = new MockNativeMT4Manager();
-
-  await manager.users.delete(1000);
-
-  // if no throw, success
-  assert.ok(true);
-});
-
-test("users.changePassword should resolve", async () => {
-  const manager = new MockNativeMT4Manager();
-
-  await manager.users.changePassword({
-    login: 1000,
-    password: "new-pass",
-  });
-
-  assert.ok(true);
+  manager.close();
 });

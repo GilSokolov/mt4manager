@@ -10,6 +10,9 @@
         "native/memory.cc",
         "native/utils/win32_error.cc",
         "native/utils/mt4_errors.cc",
+        "native/users/mt4_users.cc",
+        "native/users/mt4_users_wrap.cc",
+        "native/users/mt4_user_converter.cc"
       ],
        "libraries": [
         "ws2_32.lib"
