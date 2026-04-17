@@ -21,7 +21,7 @@
       ],
       "defines": [
         "NAPI_CPP_EXCEPTIONS",
-        "MT4_DEBUG"
+        # "MT4_DEBUG"
       ],
       "dependencies": [
         "<!(node -p \"require('node-addon-api').gyp\")"

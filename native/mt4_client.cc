@@ -1,5 +1,3 @@
-#include <utility>
-#include <iostream>
 #include <filesystem>
 
 #include "mt4_client.h"
@@ -8,6 +6,7 @@
 
 MT4Client::MT4Client(const std::string &dllPath) : dllPath_(dllPath)
 {
+  ValidateDllPath();
   LoadApi();
 }
 
@@ -125,8 +124,6 @@ void MT4Client::Connect(const std::string &server)
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
-  MT4_INFO_LOG("Connect start");
-
   EnsureOpen();
   EnsureManager();
 
@@ -135,6 +132,8 @@ void MT4Client::Connect(const std::string &server)
     MT4_DEBUG_LOG("Connect skipped (already connected)");
     return;
   }
+
+  MT4_INFO_LOG("Connect start");
 
   const int rc = manager_->Connect(server.c_str());
 
@@ -148,8 +147,6 @@ void MT4Client::Connect(const std::string &server)
 void MT4Client::Login(int login, const std::string &password)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-
-  MT4_INFO_LOG("Login start (login=" << login << ")");
 
   EnsureOpen();
   EnsureManager();
@@ -166,6 +163,8 @@ void MT4Client::Login(int login, const std::string &password)
     return;
   }
 
+  MT4_INFO_LOG("Login start (login=" << login << ")");
+
   const int rc = manager_->Login(login, password.c_str());
   ThrowMt4Error("Login", rc, manager_);
 
@@ -177,13 +176,13 @@ void MT4Client::Disconnect()
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
-  MT4_INFO_LOG("Disconnect start");
-
-  if (closed_.load() || !manager_)
+  if (closed_.load() || !manager_ || !connected_)
   {
     MT4_DEBUG_LOG("Disconnect skipped (already disconnected)");
     return;
   }
+
+  MT4_INFO_LOG("Disconnect start");
 
   const int rc = manager_->Disconnect();
   ThrowMt4Error("Disconnect", rc, manager_);
@@ -197,13 +196,13 @@ void MT4Client::Close()
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
-  MT4_INFO_LOG("Close called");
-
   if (closed_.exchange(true))
   {
     MT4_DEBUG_LOG("Close skipped (already closed)");
     return;
   }
+
+  MT4_INFO_LOG("Close called");
 
   if (manager_ && connected_)
   {

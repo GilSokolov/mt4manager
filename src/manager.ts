@@ -19,8 +19,13 @@ export default class MT4Manager {
   public readonly trades: TradesService;
   private pumpInstance?: PumpingService;
 
-  constructor(dllPath: string) {
-    this.native = new nativeBinding.MT4Manager(dllPath) as NativeManager;
+  constructor(config: { dllPath: string });
+  constructor(dllPath: string);
+
+  constructor(options: string | { dllPath: string }) {
+    const config = typeof options === "string" ? { dllPath: options } : options;
+
+    this.native = new nativeBinding.MT4Manager(config.dllPath) as NativeManager;
     this.users = new UsersService(this.native);
     this.trades = new TradesService(this.native);
   }
