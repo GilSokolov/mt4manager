@@ -8,10 +8,8 @@
         "native/mt4_client.cc",
         "native/async_job.cc",
         "native/memory.cc",
-        "native/utils/dll_loader.cc",
         "native/utils/win32_error.cc",
         "native/utils/mt4_errors.cc",
-        "native/utils/mt4_factory.cc",
       ],
        "libraries": [
         "ws2_32.lib"
@@ -22,7 +20,8 @@
         "native"
       ],
       "defines": [
-        "NAPI_CPP_EXCEPTIONS"
+        "NAPI_CPP_EXCEPTIONS",
+        "MT4_DEBUG"
       ],
       "dependencies": [
         "<!(node -p \"require('node-addon-api').gyp\")"

@@ -1,11 +1,11 @@
 #pragma once
 
 #include <atomic>
+#include <memory>
 #include <mutex>
 #include <string>
 
 #include "../include/mt4_sdk.h"
-#include "utils/mt4_factory.h"
 
 class MT4Client
 {
@@ -23,6 +23,7 @@ private:
   void UnloadApi() noexcept;
   void EnsureOpen() const;
   void EnsureManager() const;
+  void ValidateDllPath() const;
 
 private:
   std::mutex mutex_;
@@ -34,4 +35,5 @@ private:
 
   bool connected_{false};
   bool loggedIn_{false};
+  bool winsockStarted_{false};
 };

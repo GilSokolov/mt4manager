@@ -1,17 +1,14 @@
-#include "mt4_client.h"
-
 #include <utility>
-
-#include "utils/dll_loader.h"
-#include "utils/mt4_errors.h"
-
 #include <iostream>
+#include <filesystem>
+
+#include "mt4_client.h"
+#include "utils/mt4_errors.h"
+#include "utils/mt4_log.h"
 
 MT4Client::MT4Client(const std::string &dllPath) : dllPath_(dllPath)
 {
-  std::cerr << "[mt4] client ctor start" << std::endl;
   LoadApi();
-  std::cerr << "[mt4] client ctor done" << std::endl;
 }
 
 MT4Client::~MT4Client()
@@ -21,65 +18,91 @@ MT4Client::~MT4Client()
 
 void MT4Client::LoadApi()
 {
-  std::cerr << "[mt4] LoadApi start" << std::endl;
+  MT4_INFO_LOG("LoadApi start");
 
-  if (factory_)
+  if (manager_)
   {
+    MT4_DEBUG_LOG("LoadApi skipped (already initialized)");
     return;
   }
 
-  factory_ = new CManagerFactory(dllPath_.c_str());
-  std::cerr << "[mt4] factory constructed" << std::endl;
-
-  factory_->WinsockStartup();
-  std::cerr << "[mt4] WinsockStartup done" << std::endl;
-
-  if (!factory_->IsValid())
+  try
   {
-    throw std::runtime_error("CManagerFactory is not valid");
+    factory_ = new CManagerFactory(dllPath_.c_str());
+    MT4_DEBUG_LOG("factory constructed");
+
+    const int winsockCode = factory_->WinsockStartup();
+    if (winsockCode != RET_OK)
+    {
+      MT4_ERROR_LOG("WinsockStartup failed");
+      throw std::runtime_error("CManagerFactory::WinsockStartup failed");
+    }
+    MT4_DEBUG_LOG("WinsockStartup done");
+    winsockStarted_ = true;
+
+    if (!factory_->IsValid())
+    {
+      MT4_ERROR_LOG("CManagerFactory is not valid");
+      throw std::runtime_error("CManagerFactory is not valid");
+    }
+
+    manager_ = factory_->Create(ManAPIVersion);
+    MT4_DEBUG_LOG("Create returned manager=" << (manager_ ? "yes" : "no"));
+
+    if (!manager_)
+    {
+      MT4_ERROR_LOG("CManagerFactory::Create failed");
+      throw std::runtime_error("CManagerFactory::Create failed");
+    }
   }
 
-  manager_ = factory_->Create(ManAPIVersion);
-  std::cerr << "[mt4] Create returned manager=" << (manager_ ? "yes" : "no") << std::endl;
-
-  if (!manager_)
+  catch (...)
   {
-    throw std::runtime_error("CManagerFactory::Create failed");
+    MT4_ERROR_LOG("LoadApi failed, cleaning up");
+    UnloadApi();
+    throw;
   }
 
-  std::cerr << "[mt4] LoadApi done" << std::endl;
+  MT4_INFO_LOG("LoadApi done");
 }
 
 void MT4Client::UnloadApi() noexcept
 {
+  MT4_INFO_LOG("UnloadApi start");
+
   if (manager_)
   {
-    try
+    const int rc = manager_->Release();
+    if (rc != RET_OK)
     {
-      manager_->Release();
+      MT4_ERROR_LOG("Release failed with code " << rc);
     }
-    catch (...)
+    else
     {
+      MT4_DEBUG_LOG("manager released");
     }
+
     manager_ = nullptr;
   }
 
   if (factory_)
   {
-    try
+    if (winsockStarted_)
     {
       factory_->WinsockCleanup();
-    }
-    catch (...)
-    {
+      winsockStarted_ = false;
+      MT4_DEBUG_LOG("WinsockCleanup done");
     }
 
     delete factory_;
     factory_ = nullptr;
+    MT4_DEBUG_LOG("factory deleted");
   }
 
   connected_ = false;
   loggedIn_ = false;
+
+  MT4_INFO_LOG("UnloadApi done");
 }
 
 void MT4Client::EnsureOpen() const
@@ -102,34 +125,44 @@ void MT4Client::Connect(const std::string &server)
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
+  MT4_INFO_LOG("Connect start");
+
   EnsureOpen();
   EnsureManager();
 
   if (connected_)
   {
+    MT4_DEBUG_LOG("Connect skipped (already connected)");
     return;
   }
 
   const int rc = manager_->Connect(server.c_str());
+
   ThrowMt4Error("Connect", rc, manager_);
 
   connected_ = true;
+
+  MT4_INFO_LOG("Connect done");
 }
 
 void MT4Client::Login(int login, const std::string &password)
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
+  MT4_INFO_LOG("Login start (login=" << login << ")");
+
   EnsureOpen();
   EnsureManager();
 
   if (!connected_)
   {
+    MT4_ERROR_LOG("Cannot login before connect");
     throw std::runtime_error("Cannot login before connect");
   }
 
   if (loggedIn_)
   {
+    MT4_DEBUG_LOG("Login skipped (already logged in)");
     return;
   }
 
@@ -137,42 +170,71 @@ void MT4Client::Login(int login, const std::string &password)
   ThrowMt4Error("Login", rc, manager_);
 
   loggedIn_ = true;
+  MT4_INFO_LOG("Login success");
 }
 
 void MT4Client::Disconnect()
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
+  MT4_INFO_LOG("Disconnect start");
+
   if (closed_.load() || !manager_)
   {
+    MT4_DEBUG_LOG("Disconnect skipped (already disconnected)");
     return;
   }
 
-  manager_->Disconnect();
+  const int rc = manager_->Disconnect();
+  ThrowMt4Error("Disconnect", rc, manager_);
 
   connected_ = false;
   loggedIn_ = false;
+  MT4_INFO_LOG("Disconnect success");
 }
 
 void MT4Client::Close()
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
+  MT4_INFO_LOG("Close called");
+
   if (closed_.exchange(true))
   {
+    MT4_DEBUG_LOG("Close skipped (already closed)");
     return;
   }
 
   if (manager_ && connected_)
   {
-    try
+    const int rc = manager_->Disconnect();
+    if (rc != RET_OK)
     {
-      manager_->Disconnect();
+      MT4_ERROR_LOG("Disconnect failed with code " << rc);
     }
-    catch (...)
+    else
     {
+      MT4_DEBUG_LOG("Disconnected");
     }
   }
 
   UnloadApi();
+}
+
+void MT4Client::ValidateDllPath() const
+{
+  if (dllPath_.empty())
+  {
+    throw std::runtime_error("MT4 DLL path is empty");
+  }
+
+  if (!std::filesystem::exists(dllPath_))
+  {
+    throw std::runtime_error("MT4 DLL path does not exist");
+  }
+
+  if (!std::filesystem::is_regular_file(dllPath_))
+  {
+    throw std::runtime_error("MT4 DLL path is not a file");
+  }
 }

@@ -4,6 +4,7 @@
 #include <stdexcept>
 
 #include "../include/mt4_sdk.h"
+#include "./mt4_log.h"
 
 void ThrowMt4Error(const char *action, int code, CManagerInterface *manager)
 {
@@ -12,14 +13,17 @@ void ThrowMt4Error(const char *action, int code, CManagerInterface *manager)
         return;
     }
 
-    std::ostringstream message;
-    message << action << " failed with MT4 error code " << code;
+    std::ostringstream oss;
+    oss << action << " failed with MT4 error code " << code;
 
     const char *desc = manager ? manager->ErrorDescription(code) : nullptr;
     if (desc && desc[0])
     {
-        message << " (" << desc << ")";
+        oss << " (" << desc << ")";
     }
 
-    throw std::runtime_error(message.str());
+    const std::string message = oss.str();
+
+    MT4_ERROR_LOG(message);
+    throw std::runtime_error(message);
 }
