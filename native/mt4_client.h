@@ -18,6 +18,8 @@ public:
   void Disconnect();
   void Close();
 
+  CManagerInterface *Manager() const { return manager_; }
+
 private:
   void LoadApi();
   void UnloadApi() noexcept;

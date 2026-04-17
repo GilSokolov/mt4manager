@@ -5,6 +5,7 @@
 #include <napi.h>
 
 class MT4Client;
+class MT4Users;
 
 class MT4UsersWrap : public Napi::ObjectWrap<MT4UsersWrap>
 {
@@ -21,5 +22,5 @@ private:
 
     Napi::Value Get(const Napi::CallbackInfo &info);
 
-    std::shared_ptr<MT4Client> client_;
+    std::shared_ptr<MT4Users> users_;
 };

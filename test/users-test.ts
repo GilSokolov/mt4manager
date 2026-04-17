@@ -7,13 +7,20 @@ import { config } from "./config";
 test("users.get should return user", async () => {
   const manager = new MT4Manager(config.dllPath);
 
-  const user = await manager.users.get(123);
+  await manager.connect(config.server);
+  await manager.login(config.login, config.password);
 
-  assert.equal(user.login, 123);
-  assert.equal(user.group, "demo\\group");
-  assert.equal(user.name, "Test User");
-  assert.equal(user.email, "test@example.com");
-  assert.equal(user.leverage, 100);
+  console.log("manager login =", config.login);
+  console.log("target user login =", config.userLogin);
+
+  const user = await manager.users.get(config.userLogin);
+
+  console.log(user);
+
+  assert.equal(user.login, config.userLogin);
+  assert.ok(typeof user.group === "string");
+
+  manager.close();
 });
 
 test("users.get should reject invalid login", () => {

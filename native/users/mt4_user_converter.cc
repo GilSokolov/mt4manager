@@ -1,4 +1,4 @@
-#include "users/mt4_user_converter.h"
+#include "./mt4_user_converter.h"
 
 Napi::Object ToNapiUser(Napi::Env env, const MT4UserRecord &user)
 {

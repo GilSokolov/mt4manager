@@ -1,10 +1,27 @@
-#include "users/mt4_users_wrap.h"
+#include "./mt4_users_wrap.h"
 
 #include <memory>
 
 #include "../mt4_client.h"
+#include "mt4_users.h"
+
+#include <iostream>
 
 Napi::FunctionReference MT4UsersWrap::constructor;
+
+namespace
+{
+    Napi::Object ToNapiUser(Napi::Env env, const MT4UserRecord &user)
+    {
+        Napi::Object obj = Napi::Object::New(env);
+        obj.Set("login", Napi::Number::New(env, user.login));
+        obj.Set("group", Napi::String::New(env, user.group));
+        obj.Set("name", Napi::String::New(env, user.name));
+        obj.Set("email", Napi::String::New(env, user.email));
+        obj.Set("leverage", Napi::Number::New(env, user.leverage));
+        return obj;
+    }
+} // namespace
 
 Napi::Function MT4UsersWrap::Init(Napi::Env env)
 {
@@ -29,7 +46,7 @@ Napi::Object MT4UsersWrap::NewInstance(
 
     Napi::Object obj = constructor.New({});
     MT4UsersWrap *wrap = Napi::ObjectWrap<MT4UsersWrap>::Unwrap(obj);
-    wrap->client_ = client;
+    wrap->users_ = std::make_shared<MT4Users>(client);
 
     return scope.Escape(napi_value(obj)).ToObject();
 }
@@ -51,15 +68,15 @@ Napi::Value MT4UsersWrap::Get(const Napi::CallbackInfo &info)
     }
 
     const int login = info[0].As<Napi::Number>().Int32Value();
-
-    // Simple stub first, just to make the native shape work end-to-end.
-    // Replace this later with real MT4 SDK user lookup.
-    Napi::Object user = Napi::Object::New(env);
-    user.Set("login", Napi::Number::New(env, login));
-    user.Set("group", Napi::String::New(env, "demo\\group"));
-    user.Set("name", Napi::String::New(env, "Test User"));
-    user.Set("email", Napi::String::New(env, "test@example.com"));
-    user.Set("leverage", Napi::Number::New(env, 100));
-
-    return user;
+    std::cerr << "[mt4][users] Get start login=" << login << std::endl;
+    try
+    {
+        const MT4UserRecord user = users_->Get(login);
+        return ToNapiUser(env, user);
+    }
+    catch (const std::exception &ex)
+    {
+        Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
+        return env.Null();
+    }
 }
