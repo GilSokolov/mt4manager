@@ -2,6 +2,6 @@
 
 #include <napi.h>
 
-#include "users/mt4_users.h"
+#include "../include/mt4_sdk.h"
 
-Napi::Object ToNapiUser(Napi::Env env, const MT4UserRecord &user);
+Napi::Object ToNapiUser(Napi::Env env, const UserRecord &user);

@@ -11,7 +11,7 @@ MT4Users::MT4Users(const std::shared_ptr<MT4Client> &client)
     : client_(client)
 {
 }
-MT4UserRecord MT4Users::Get(int login) const
+UserRecord MT4Users::Get(int login) const
 {
     if (!client_)
     {
@@ -50,13 +50,7 @@ MT4UserRecord MT4Users::Get(int login) const
         throw std::runtime_error("Requested user not found in UserRecordsRequest result");
     }
 
-    MT4UserRecord user{};
-    user.login = found->login;
-    user.group = found->group;
-    user.name = found->name;
-    user.email = found->email;
-    user.leverage = found->leverage;
-
+       UserRecord user = *found;
     manager->MemFree(records);
     return user;
 }

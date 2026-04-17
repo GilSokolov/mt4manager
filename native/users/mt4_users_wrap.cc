@@ -7,21 +7,9 @@
 
 #include <iostream>
 
-Napi::FunctionReference MT4UsersWrap::constructor;
+#include "./mt4_user_converter.h"
 
-namespace
-{
-    Napi::Object ToNapiUser(Napi::Env env, const MT4UserRecord &user)
-    {
-        Napi::Object obj = Napi::Object::New(env);
-        obj.Set("login", Napi::Number::New(env, user.login));
-        obj.Set("group", Napi::String::New(env, user.group));
-        obj.Set("name", Napi::String::New(env, user.name));
-        obj.Set("email", Napi::String::New(env, user.email));
-        obj.Set("leverage", Napi::Number::New(env, user.leverage));
-        return obj;
-    }
-} // namespace
+Napi::FunctionReference MT4UsersWrap::constructor;
 
 Napi::Function MT4UsersWrap::Init(Napi::Env env)
 {
@@ -71,7 +59,7 @@ Napi::Value MT4UsersWrap::Get(const Napi::CallbackInfo &info)
     std::cerr << "[mt4][users] Get start login=" << login << std::endl;
     try
     {
-        const MT4UserRecord user = users_->Get(login);
+        const UserRecord user = users_->Get(login);
         return ToNapiUser(env, user);
     }
     catch (const std::exception &ex)
