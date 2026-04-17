@@ -2,16 +2,10 @@
 
 #include <atomic>
 #include <mutex>
-#include <stdexcept>
 #include <string>
+
 #include "../include/mt4_sdk.h"
 #include "utils/mt4_factory.h"
-
-#ifdef _WIN32
-#include <windows.h>
-#else
-using HMODULE = void *;
-#endif
 
 class MT4Client
 {

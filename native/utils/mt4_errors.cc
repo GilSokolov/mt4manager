@@ -5,17 +5,9 @@
 
 #include "../include/mt4_sdk.h"
 
-bool IsMt4Success(int code)
+void ThrowMt4Error(const char *action, int code, CManagerInterface *manager)
 {
-    return code == 0;
-}
-
-void ThrowMt4Error(
-    const char *action,
-    int code,
-    CManagerInterface *manager)
-{
-    if (IsMt4Success(code))
+    if (code == RET_OK)
     {
         return;
     }
@@ -23,14 +15,11 @@ void ThrowMt4Error(
     std::ostringstream message;
     message << action << " failed with MT4 error code " << code;
 
-    // Later, if your MT4 API exposes a readable error method, add it here.
-    // Example:
-    // if (manager) {
-    //   const char* text = manager->ErrorDescription(code);
-    //   if (text && *text) {
-    //     message << " (" << text << ")";
-    //   }
-    // }
+    const char *desc = manager ? manager->ErrorDescription(code) : nullptr;
+    if (desc && desc[0])
+    {
+        message << " (" << desc << ")";
+    }
 
     throw std::runtime_error(message.str());
 }

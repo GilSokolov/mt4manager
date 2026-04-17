@@ -111,18 +111,6 @@ void MT4Client::Connect(const std::string &server)
   }
 
   const int rc = manager_->Connect(server.c_str());
-  if (rc != RET_OK)
-  {
-    const char *text = manager_->ErrorDescription(rc);
-    std::string msg = "Connect failed with MT4 error code " + std::to_string(rc);
-    if (text && *text)
-    {
-      msg += " (";
-      msg += text;
-      msg += ")";
-    }
-    throw std::runtime_error(msg);
-  }
   ThrowMt4Error("Connect", rc, manager_);
 
   connected_ = true;
