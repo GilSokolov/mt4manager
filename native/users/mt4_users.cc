@@ -55,3 +55,33 @@ UserRecord MT4Users::Get(int login) const
     manager->MemFree(records);
     return user;
 }
+
+void MT4Users::Subscribe(int login)
+{
+    if (login <= 0)
+    {
+        throw std::runtime_error("Expected login to be a positive integer");
+    }
+
+    subscriptions_.Subscribe(login);
+}
+
+void MT4Users::Unsubscribe(int login)
+{
+    if (login <= 0)
+    {
+        throw std::runtime_error("Expected login to be a positive integer");
+    }
+
+    subscriptions_.Unsubscribe(login);
+}
+
+void MT4Users::UnsubscribeAll()
+{
+    subscriptions_.UnsubscribeAll();
+}
+
+bool MT4Users::IsSubscribed(int login) const
+{
+    return subscriptions_.Contains(login);
+}

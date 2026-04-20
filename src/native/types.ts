@@ -11,6 +11,9 @@ export interface NativeUsersApi {
   update(input: UpdateUserInput): Promise<User>;
   delete(login: number): Promise<void>;
   changePassword(input: ChangeUserPasswordInput): Promise<void>;
+  subscribe(login: number): void;
+  unsubscribe(login: number): void;
+  unsubscribeAll(): void;
 }
 
 export interface NativeMT4Manager {

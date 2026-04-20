@@ -19,6 +19,9 @@ Napi::Function MT4UsersWrap::Init(Napi::Env env)
         "MT4Users",
         {
             InstanceMethod("get", &MT4UsersWrap::Get),
+            InstanceMethod("subscribe", &MT4UsersWrap::Subscribe),
+            InstanceMethod("unsubscribe", &MT4UsersWrap::Unsubscribe),
+            InstanceMethod("unsubscribeAll", &MT4UsersWrap::UnsubscribeAll),
         });
 
     constructor = Napi::Persistent(klass);
@@ -60,6 +63,68 @@ Napi::Value MT4UsersWrap::Get(const Napi::CallbackInfo &info)
     {
         const UserRecord user = users_->Get(login);
         return ToNapiUser(env, user);
+    }
+    catch (const std::exception &ex)
+    {
+        Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
+        return env.Null();
+    }
+}
+
+Napi::Value MT4UsersWrap::Subscribe(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    const int login = napi_utils::GetInt32(info, 0, "login");
+
+    if (napi_utils::HasPendingException(env))
+    {
+        return env.Null();
+    }
+
+    try
+    {
+        users_->Subscribe(login);
+        return env.Undefined();
+    }
+    catch (const std::exception &ex)
+    {
+        Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
+        return env.Null();
+    }
+}
+
+Napi::Value MT4UsersWrap::Unsubscribe(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    const int login = napi_utils::GetInt32(info, 0, "login");
+
+    if (napi_utils::HasPendingException(env))
+    {
+        return env.Null();
+    }
+
+    try
+    {
+        users_->Unsubscribe(login);
+        return env.Undefined();
+    }
+    catch (const std::exception &ex)
+    {
+        Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
+        return env.Null();
+    }
+}
+
+Napi::Value MT4UsersWrap::UnsubscribeAll(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    try
+    {
+        users_->UnsubscribeAll();
+        return env.Undefined();
     }
     catch (const std::exception &ex)
     {

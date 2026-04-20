@@ -28,3 +28,13 @@ test("users.get should reject invalid login", () => {
 
   manager.close();
 });
+
+test("users subscribe/unsubscribe does not throw", async () => {
+  const manager = new MT4Manager(config.dllPath);
+
+  manager.users.subscribe(123);
+  manager.users.unsubscribe(123);
+  manager.users.unsubscribeAll();
+
+  await manager.close();
+});

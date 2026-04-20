@@ -16,6 +16,9 @@ public:
         const std::shared_ptr<MT4Client> &client);
 
     MT4UsersWrap(const Napi::CallbackInfo &info);
+    Napi::Value Subscribe(const Napi::CallbackInfo &info);
+    Napi::Value Unsubscribe(const Napi::CallbackInfo &info);
+    Napi::Value UnsubscribeAll(const Napi::CallbackInfo &info);
 
 private:
     static Napi::FunctionReference constructor;
