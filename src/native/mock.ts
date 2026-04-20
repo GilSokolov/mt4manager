@@ -14,7 +14,7 @@ class MockNativeUsersApi {
       name: "Test User",
       email: "test@example.com",
       leverage: 100,
-    };
+    } as User;
   }
 
   public async create(input: CreateUserInput): Promise<User> {
@@ -24,7 +24,7 @@ class MockNativeUsersApi {
       name: input.name,
       email: input.email,
       leverage: input.leverage,
-    };
+    } as User;
   }
 
   public async update(input: UpdateUserInput): Promise<User> {
@@ -34,7 +34,7 @@ class MockNativeUsersApi {
       name: input.name,
       email: input.email,
       leverage: input.leverage,
-    };
+    } as User;
   }
 
   public async delete(_login: number): Promise<void> {}

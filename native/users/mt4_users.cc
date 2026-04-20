@@ -11,6 +11,7 @@ MT4Users::MT4Users(const std::shared_ptr<MT4Client> &client)
     : client_(client)
 {
 }
+
 UserRecord MT4Users::Get(int login) const
 {
     if (!client_)
@@ -28,7 +29,7 @@ UserRecord MT4Users::Get(int login) const
     int total = 1;
 
     UserRecord *records = manager->UserRecordsRequest(logins, &total);
-    std::cerr << "[mt4][users] UsersRequest total=" << total << std::endl;
+
     if (!records || total <= 0)
     {
         throw std::runtime_error("UserRecordsRequest returned no users");
@@ -50,7 +51,7 @@ UserRecord MT4Users::Get(int login) const
         throw std::runtime_error("Requested user not found in UserRecordsRequest result");
     }
 
-       UserRecord user = *found;
+    UserRecord user = *found;
     manager->MemFree(records);
     return user;
 }

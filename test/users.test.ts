@@ -10,12 +10,7 @@ test("users.get should return user", async () => {
   await manager.connect(config.server);
   await manager.login(config.login, config.password);
 
-  console.log("manager login =", config.login);
-  console.log("target user login =", config.userLogin);
-
   const user = await manager.users.get(config.userLogin);
-
-  console.log(user);
 
   assert.equal(user.login, config.userLogin);
   assert.ok(typeof user.group === "string");

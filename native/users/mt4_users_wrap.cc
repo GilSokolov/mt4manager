@@ -8,22 +8,23 @@
 #include <iostream>
 
 #include "./mt4_user_converter.h"
+#include "../utils/napi_utils.h"
 
 Napi::FunctionReference MT4UsersWrap::constructor;
 
 Napi::Function MT4UsersWrap::Init(Napi::Env env)
 {
-    Napi::Function func = DefineClass(
+    Napi::Function klass = DefineClass(
         env,
         "MT4Users",
         {
             InstanceMethod("get", &MT4UsersWrap::Get),
         });
 
-    constructor = Napi::Persistent(func);
+    constructor = Napi::Persistent(klass);
     constructor.SuppressDestruct();
 
-    return func;
+    return klass;
 }
 
 Napi::Object MT4UsersWrap::NewInstance(
@@ -48,15 +49,13 @@ Napi::Value MT4UsersWrap::Get(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
 
-    if (info.Length() < 1 || !info[0].IsNumber())
+    const int login = napi_utils::GetInt32(info, 0, "login");
+
+    if (napi_utils::HasPendingException(env))
     {
-        Napi::TypeError::New(env, "Expected (login: number)")
-            .ThrowAsJavaScriptException();
         return env.Null();
     }
 
-    const int login = info[0].As<Napi::Number>().Int32Value();
-    std::cerr << "[mt4][users] Get start login=" << login << std::endl;
     try
     {
         const UserRecord user = users_->Get(login);
