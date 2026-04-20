@@ -46,13 +46,12 @@ export default class MT4Manager {
     return this.native.close();
   }
 
-  pumping(): PumpingService {
-    if (!this.pumpInstance) {
-      this.pumpInstance = new PumpingService(
-        this.native as unknown as EventEmitter,
-      );
-    }
-    return this.pumpInstance;
+  startPumping() {
+    return this.native.startPumping();
+  }
+
+  stopPumping() {
+    this.native.stopPumping();
   }
 }
 

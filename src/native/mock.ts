@@ -49,6 +49,12 @@ class MockNativeUsersApi {
 }
 
 export class MockNativeMT4Manager implements NativeMT4Manager {
+  async stopPumping(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  async startPumping(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
   public readonly users = new MockNativeUsersApi();
 
   public async connect(server: string): Promise<void> {}

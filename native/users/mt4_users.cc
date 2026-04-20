@@ -10,6 +10,9 @@
 MT4Users::MT4Users(const std::shared_ptr<MT4Client> &client)
     : client_(client)
 {
+
+    client_->AddPumpListener([](int code)
+                             { std::cerr << "[mt4][users] pump code=" << code << std::endl; });
 }
 
 UserRecord MT4Users::Get(int login) const

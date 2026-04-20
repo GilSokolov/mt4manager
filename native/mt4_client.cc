@@ -182,6 +182,8 @@ void MT4Client::Disconnect()
     return;
   }
 
+  StopPumping();
+
   MT4_INFO_LOG("Disconnect start");
 
   const int rc = manager_->Disconnect();
@@ -201,6 +203,8 @@ void MT4Client::Close()
     MT4_DEBUG_LOG("Close skipped (already closed)");
     return;
   }
+
+  StopPumping();
 
   MT4_INFO_LOG("Close called");
 
@@ -236,4 +240,91 @@ void MT4Client::ValidateDllPath() const
   {
     throw std::runtime_error("MT4 DLL path is not a file");
   }
+}
+
+MT4Client *MT4Client::active_pump_client_ = nullptr;
+
+void MT4Client::StartPumping()
+{
+  if (!manager_)
+  {
+    throw std::runtime_error("MT4 manager is not initialized");
+  }
+
+  if (pumping_)
+  {
+    return;
+  }
+
+  pump_flags_ = CLIENT_FLAGS_HIDETICKS | CLIENT_FLAGS_HIDENEWS |
+                CLIENT_FLAGS_HIDEMAIL | CLIENT_FLAGS_HIDEONLINE;
+
+  active_pump_client_ = this;
+
+  std::cerr << "[mt4] StartPumping begin" << std::endl;
+  const int code = manager_->PumpingSwitch(&PumpCallback, NULL, 0, pump_flags_);
+  std::cerr << "[mt4] PumpingSwitch returned code=" << code << std::endl;
+  ThrowMt4Error("PumpingSwitch", code, manager_);
+  std::cerr << "[mt4] StartPumping success" << std::endl;
+
+  pumping_ = true;
+}
+
+void MT4Client::StopPumping()
+{
+  if (!manager_ || !pumping_)
+  {
+    return;
+  }
+
+  // Common MT4 pattern is PumpingSwitch(NULL, ...) to stop.
+  std::cerr << "[mt4] StopPumping begin" << std::endl;
+  const int code = manager_->PumpingSwitch(&PumpCallback, NULL, 0, pump_flags_);
+  ThrowMt4Error("PumpingSwitch", code, manager_);
+  std::cerr << "[mt4] StopPumping success" << std::endl;
+  pumping_ = false;
+
+  if (active_pump_client_ == this)
+  {
+    active_pump_client_ = nullptr;
+  }
+}
+
+bool MT4Client::IsPumping() const
+{
+  return pumping_;
+}
+
+void __stdcall MT4Client::PumpCallback(int code)
+{
+  if (active_pump_client_)
+  {
+    active_pump_client_->HandlePumpEvent(code);
+  }
+}
+
+void MT4Client::HandlePumpEvent(int code)
+{
+
+  std::cerr << "[mt4][pump] code=" << code << std::endl;
+  std::vector<PumpListener> listeners;
+
+  {
+    std::lock_guard<std::mutex> lock(pump_listeners_mutex_);
+    listeners = pump_listeners_;
+  }
+
+  for (const auto &listener : listeners)
+  {
+    if (listener)
+    {
+      listener(code);
+    }
+  }
+}
+
+void MT4Client::AddPumpListener(PumpListener listener)
+{
+  std::lock_guard<std::mutex> lock(pump_listeners_mutex_);
+  pump_listeners_.push_back(std::move(listener));
 }

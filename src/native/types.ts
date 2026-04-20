@@ -21,6 +21,8 @@ export interface NativeMT4Manager {
   login(login: number, password: string): Promise<void>;
   disconnect(): Promise<void>;
   close(): void;
+  startPumping(): Promise<void>;
+  stopPumping(): void;
 
   users: NativeUsersApi;
 }

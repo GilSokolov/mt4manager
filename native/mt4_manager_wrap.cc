@@ -24,6 +24,8 @@ Napi::Object MT4ManagerWrap::Init(Napi::Env env, Napi::Object exports)
           InstanceMethod("login", &MT4ManagerWrap::Login),
           InstanceMethod("disconnect", &MT4ManagerWrap::Disconnect),
           InstanceMethod("close", &MT4ManagerWrap::Close),
+          InstanceMethod("startPumping", &MT4ManagerWrap::StartPumping),
+          InstanceMethod("stopPumping", &MT4ManagerWrap::StopPumping),
       });
 
   constructor = Napi::Persistent(klass);
@@ -136,4 +138,34 @@ Napi::Value MT4ManagerWrap::Close(const Napi::CallbackInfo &info)
   };
 
   return async_utils::QueuePromise(env, "MT4Manager::close", task);
+}
+
+Napi::Value MT4ManagerWrap::StartPumping(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+
+  std::shared_ptr<MT4Client> client = client_;
+
+  auto task = [client]()
+  {
+    client->StartPumping();
+  };
+
+  return async_utils::QueuePromise(env, "MT4Manager::StartPumping", task);
+}
+
+Napi::Value MT4ManagerWrap::StopPumping(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+
+  try
+  {
+    client_->StopPumping();
+    return env.Undefined();
+  }
+  catch (const std::exception &ex)
+  {
+    Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
+    return env.Null();
+  }
 }

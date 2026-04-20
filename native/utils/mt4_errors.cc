@@ -13,6 +13,12 @@ void ThrowMt4Error(const char *action, int code, CManagerInterface *manager)
         return;
     }
 
+    if (code == RET_OK_NONE)
+    {
+        MT4_INFO_LOG("returned OK_NONE (no-op)");
+        return;
+    }
+
     std::ostringstream oss;
     oss << action << " failed with MT4 error code " << code;
 

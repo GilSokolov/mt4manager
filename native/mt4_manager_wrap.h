@@ -21,6 +21,8 @@ private:
   Napi::Value Login(const Napi::CallbackInfo &info);
   Napi::Value Disconnect(const Napi::CallbackInfo &info);
   Napi::Value Close(const Napi::CallbackInfo &info);
+  Napi::Value StartPumping(const Napi::CallbackInfo &info);
+  Napi::Value StopPumping(const Napi::CallbackInfo &info);
 
   std::shared_ptr<MT4Client> client_;
   Napi::ObjectReference users_;
