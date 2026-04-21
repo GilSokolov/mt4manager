@@ -16,7 +16,13 @@ async function main() {
   await manager.startPumping();
   console.log("[mt4] pumping started");
 
-  await new Promise((resolve) => setTimeout(resolve, 3000000));
+  manager.users.watch(1821026789, (user) => {
+    console.log(user);
+  });
+
+  
+
+  await new Promise((resolve) => setTimeout(resolve, 30000));
 
   manager.stopPumping();
 

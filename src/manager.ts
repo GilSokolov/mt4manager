@@ -1,9 +1,8 @@
-import { EventEmitter } from "events";
-import { loadBinding } from "./utils/paths";
+import { NativeMT4Manager } from "./native/types";
 import { PumpingService } from "./services/pumping";
 import { TradesService } from "./services/trades";
 import { UsersService } from "./services/users";
-import { NativeMT4Manager } from "./native/types";
+import { loadBinding } from "./utils/paths";
 
 const nativeBinding = loadBinding();
 
@@ -22,7 +21,7 @@ export default class MT4Manager {
     this.native = new nativeBinding.MT4Manager(
       config.dllPath,
     ) as NativeMT4Manager;
-    this.users = new UsersService(this.native);
+    this.users = new UsersService(this.native.users);
     this.trades = new TradesService(this.native);
   }
 
