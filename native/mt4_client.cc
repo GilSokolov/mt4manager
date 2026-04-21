@@ -262,7 +262,9 @@ void MT4Client::StartPumping()
   active_pump_client_ = this;
 
   std::cerr << "[mt4] StartPumping begin" << std::endl;
-  const int code = manager_->PumpingSwitch(&PumpCallback, NULL, 0, pump_flags_);
+  // const int code = manager_->PumpingSwitch(&PumpCallback, NULL, 0, pump_flags_);
+  const int code = manager_->PumpingSwitchEx(&PumpCallback, pump_flags_, nullptr);
+
   std::cerr << "[mt4] PumpingSwitch returned code=" << code << std::endl;
   ThrowMt4Error("PumpingSwitch", code, manager_);
   std::cerr << "[mt4] StartPumping success" << std::endl;
@@ -279,7 +281,8 @@ void MT4Client::StopPumping()
 
   // Common MT4 pattern is PumpingSwitch(NULL, ...) to stop.
   std::cerr << "[mt4] StopPumping begin" << std::endl;
-  const int code = manager_->PumpingSwitch(&PumpCallback, NULL, 0, pump_flags_);
+  // const int code = manager_->PumpingSwitch(&PumpCallback, NULL, 0, pump_flags_);
+  const int code = manager_->PumpingSwitchEx(&PumpCallback, pump_flags_, nullptr);
   ThrowMt4Error("PumpingSwitch", code, manager_);
   std::cerr << "[mt4] StopPumping success" << std::endl;
   pumping_ = false;
@@ -295,18 +298,17 @@ bool MT4Client::IsPumping() const
   return pumping_;
 }
 
-void __stdcall MT4Client::PumpCallback(int code)
+void __stdcall MT4Client::PumpCallback(int code, int type, void *data, void *param)
 {
   if (active_pump_client_)
   {
-    active_pump_client_->HandlePumpEvent(code);
+    active_pump_client_->HandlePumpEvent(code, type, data, param);
   }
 }
 
-void MT4Client::HandlePumpEvent(int code)
+void MT4Client::HandlePumpEvent(int code, int type, void *data, void *param)
 {
 
-  std::cerr << "[mt4][pump] code=" << code << std::endl;
   std::vector<PumpListener> listeners;
 
   {
@@ -318,7 +320,7 @@ void MT4Client::HandlePumpEvent(int code)
   {
     if (listener)
     {
-      listener(code);
+      listener(code, type, data, param);
     }
   }
 }

@@ -2,25 +2,25 @@
 
 #include <memory>
 #include <string>
+#include <functional>
 #include "../include/mt4_sdk.h"
-#include "../utils/subscription_set.h"
 
 class MT4Client;
 
 class MT4Users
 {
 public:
+    using UpdateHandler = std::function<void(const UserRecord *)>;
     explicit MT4Users(const std::shared_ptr<MT4Client> &client);
 
     UserRecord Get(int login) const;
 
-    void Subscribe(int login);
-    void Unsubscribe(int login);
-    void UnsubscribeAll();
+    void SetUpdateHandler(UpdateHandler handler);
 
-    bool IsSubscribed(int login) const;
+private:
+    void HandleEvent(int code, int type, void *data, void *param);
 
 private:
     std::shared_ptr<MT4Client> client_;
-    SubscriptionSet<int> subscriptions_;
+    UpdateHandler update_handler_;
 };

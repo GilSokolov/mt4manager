@@ -16,7 +16,7 @@ async function main() {
   await manager.startPumping();
   console.log("[mt4] pumping started");
 
-  await new Promise((resolve) => setTimeout(resolve, 3000));
+  await new Promise((resolve) => setTimeout(resolve, 3000000));
 
   manager.stopPumping();
 

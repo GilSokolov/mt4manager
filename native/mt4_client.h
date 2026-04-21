@@ -21,7 +21,7 @@ public:
   void StopPumping();
   bool IsPumping() const;
 
-  using PumpListener = std::function<void(int)>;
+  using PumpListener = std::function<void(int, int, void *, void *)>;
   void AddPumpListener(PumpListener listener);
 
   CManagerInterface *Manager() const { return manager_; }
@@ -34,9 +34,9 @@ private:
   void ValidateDllPath() const;
 
 private:
-  static void __stdcall PumpCallback(int code);
+  static void __stdcall PumpCallback(int code, int type, void *data, void *param);
 
-  void HandlePumpEvent(int code);
+  void HandlePumpEvent(int code, int type, void *data, void *param);
 
 private:
   std::mutex mutex_;

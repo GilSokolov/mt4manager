@@ -19,9 +19,7 @@ Napi::Function MT4UsersWrap::Init(Napi::Env env)
         "MT4Users",
         {
             InstanceMethod("get", &MT4UsersWrap::Get),
-            InstanceMethod("subscribe", &MT4UsersWrap::Subscribe),
-            InstanceMethod("unsubscribe", &MT4UsersWrap::Unsubscribe),
-            InstanceMethod("unsubscribeAll", &MT4UsersWrap::UnsubscribeAll),
+            InstanceMethod("_setUpdateHandler", &MT4UsersWrap::SetUpdateHandler),
         });
 
     constructor = Napi::Persistent(klass);
@@ -48,6 +46,14 @@ MT4UsersWrap::MT4UsersWrap(const Napi::CallbackInfo &info)
 {
 }
 
+MT4UsersWrap::~MT4UsersWrap()
+{
+    if (update_tsfn_)
+    {
+        update_tsfn_.Release();
+    }
+}
+
 Napi::Value MT4UsersWrap::Get(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
@@ -71,64 +77,54 @@ Napi::Value MT4UsersWrap::Get(const Napi::CallbackInfo &info)
     }
 }
 
-Napi::Value MT4UsersWrap::Subscribe(const Napi::CallbackInfo &info)
+Napi::Value MT4UsersWrap::SetUpdateHandler(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
 
-    const int login = napi_utils::GetInt32(info, 0, "login");
-
-    if (napi_utils::HasPendingException(env))
+    if (info.Length() < 1 || !info[0].IsFunction())
     {
+        Napi::TypeError::New(env, "Expected (handler: function)")
+            .ThrowAsJavaScriptException();
         return env.Null();
     }
 
-    try
+    if (update_tsfn_)
     {
-        users_->Subscribe(login);
-        return env.Undefined();
-    }
-    catch (const std::exception &ex)
-    {
-        Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
-        return env.Null();
-    }
-}
-
-Napi::Value MT4UsersWrap::Unsubscribe(const Napi::CallbackInfo &info)
-{
-    Napi::Env env = info.Env();
-
-    const int login = napi_utils::GetInt32(info, 0, "login");
-
-    if (napi_utils::HasPendingException(env))
-    {
-        return env.Null();
+        update_tsfn_.Release();
+        update_tsfn_ = Napi::ThreadSafeFunction();
     }
 
-    try
-    {
-        users_->Unsubscribe(login);
-        return env.Undefined();
-    }
-    catch (const std::exception &ex)
-    {
-        Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
-        return env.Null();
-    }
-}
+    Napi::Function jsHandler = info[0].As<Napi::Function>();
 
-Napi::Value MT4UsersWrap::UnsubscribeAll(const Napi::CallbackInfo &info)
-{
-    Napi::Env env = info.Env();
+    update_tsfn_ = Napi::ThreadSafeFunction::New(
+        env,
+        jsHandler,
+        "MT4UsersUpdateHandler",
+        0,
+        1);
 
-    try
-    {
-        users_->UnsubscribeAll();
-        return env.Undefined();
-    }
-    catch (const std::exception &ex)
-    {
-        Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
-        return env.Null();
-    }
+    users_->SetUpdateHandler([this](const UserRecord *user)
+                             {
+        if (!update_tsfn_)
+        {
+            return;
+        }
+
+        auto *payload = new UserRecord(*user);
+
+        napi_status status = update_tsfn_.BlockingCall(
+            payload,
+            [](Napi::Env env, Napi::Function jsCallback, UserRecord *payload)
+            {
+                Napi::Object obj = ToNapiUser(env, *payload);
+                jsCallback.Call({obj});
+                delete payload;
+            });
+
+        if (status != napi_ok)
+        {
+            delete payload;
+        } });
+
+    return env.Undefined();
 }

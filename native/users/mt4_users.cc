@@ -11,8 +11,28 @@ MT4Users::MT4Users(const std::shared_ptr<MT4Client> &client)
     : client_(client)
 {
 
-    client_->AddPumpListener([](int code)
-                             { std::cerr << "[mt4][users] pump code=" << code << std::endl; });
+    client_->AddPumpListener([this](int code, int type, void *data, void *param)
+                             { HandleEvent(code, type, data, param); });
+}
+
+void MT4Users::HandleEvent(int code, int type, void *data, void *param)
+{
+    if (code != PUMP_UPDATE_USERS || !data)
+    {
+        return;
+    }
+
+    const UserRecord *user = static_cast<const UserRecord *>(data);
+
+    if (update_handler_)
+    {
+        update_handler_(user);
+    }
+}
+
+void MT4Users::SetUpdateHandler(UpdateHandler handler)
+{
+    update_handler_ = std::move(handler);
 }
 
 UserRecord MT4Users::Get(int login) const
@@ -57,34 +77,4 @@ UserRecord MT4Users::Get(int login) const
     UserRecord user = *found;
     manager->MemFree(records);
     return user;
-}
-
-void MT4Users::Subscribe(int login)
-{
-    if (login <= 0)
-    {
-        throw std::runtime_error("Expected login to be a positive integer");
-    }
-
-    subscriptions_.Subscribe(login);
-}
-
-void MT4Users::Unsubscribe(int login)
-{
-    if (login <= 0)
-    {
-        throw std::runtime_error("Expected login to be a positive integer");
-    }
-
-    subscriptions_.Unsubscribe(login);
-}
-
-void MT4Users::UnsubscribeAll()
-{
-    subscriptions_.UnsubscribeAll();
-}
-
-bool MT4Users::IsSubscribed(int login) const
-{
-    return subscriptions_.Contains(login);
 }

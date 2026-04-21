@@ -39,13 +39,9 @@ class MockNativeUsersApi {
 
   public async delete(_login: number): Promise<void> {}
 
-  public subscribe(..._args: unknown[]): void {}
-
-  public unsubscribe(..._args: unknown[]): void {}
-
-  public unsubscribeAll(): void {}
-
   public async changePassword(_input: ChangeUserPasswordInput): Promise<void> {}
+
+  _setUpdateHandler: any;
 }
 
 export class MockNativeMT4Manager implements NativeMT4Manager {

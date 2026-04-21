@@ -57,16 +57,6 @@ export class UsersService {
     });
   }
 
-  subscribe(login: number) {
-    return this.native.users.subscribe(login);
-  }
-  unsubscribe(login: number) {
-    return this.native.users.unsubscribe(login);
-  }
-  unsubscribeAll() {
-    return this.native.users.unsubscribeAll();
-  }
-
   private assertLogin(login: number): void {
     if (!Number.isInteger(login) || login <= 0) {
       throw new TypeError("login must be a positive integer");
