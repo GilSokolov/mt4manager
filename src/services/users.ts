@@ -28,7 +28,6 @@ export class UsersService extends EventEmitter {
   }
 
   create(input: CreateUserInput) {
-    this.assertLogin(input.login);
     this.assertRequiredString(input.group, "group");
 
     return this.native.create({
@@ -36,20 +35,18 @@ export class UsersService extends EventEmitter {
       name: this.normalizeString(input.name),
       email: this.normalizeString(input.email),
       password: this.normalizeString(input.password),
-      investorPassword: this.normalizeString(input.investorPassword),
+      passwordInvestor: this.normalizeString(input.passwordInvestor),
     });
   }
 
   update(input: UpdateUserInput) {
     this.assertLogin(input.login);
 
-    if (input.group !== undefined) {
-      this.assertRequiredString(input.group, "group");
-    }
+    this.assertRequiredString(input.group, "group");
 
     return this.native.update({
       ...input,
-      group: this.normalizeString(input.group),
+      group: input.group,
       name: this.normalizeString(input.name),
       email: this.normalizeString(input.email),
     });

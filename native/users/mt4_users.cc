@@ -82,3 +82,36 @@ UserRecord MT4Users::Get(int login) const
     manager->MemFree(records);
     return user;
 }
+
+int MT4Users::Create(UserRecord &user) const
+{
+    if (!client_)
+    {
+        throw std::runtime_error("MT4 client is not initialized");
+    }
+
+    CManagerInterface *manager = client_->Manager();
+    if (!manager)
+    {
+        throw std::runtime_error("MT4 manager is not initialized");
+    }
+
+    ThrowMt4Error("UserRecordNew", manager->UserRecordNew(&user), manager);
+    return user.login;
+}
+
+void MT4Users::Update(const UserRecord &user) const
+{
+    if (!client_)
+    {
+        throw std::runtime_error("MT4 client is not initialized");
+    }
+
+    CManagerInterface *manager = client_->Manager();
+    if (!manager)
+    {
+        throw std::runtime_error("MT4 manager is not initialized");
+    }
+
+    ThrowMt4Error("UserRecordUpdate", manager->UserRecordUpdate(&user), manager);
+}

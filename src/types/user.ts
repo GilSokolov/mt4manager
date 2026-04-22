@@ -5,10 +5,10 @@ export interface User {
   password: string;
 
   // --- access flags (MT4 uses int flags, so keep number)
-  enable: number;
-  enableChangePassword: number;
-  enableReadOnly: number;
-  enableOtp: number;
+  enable: boolean;
+  enableChangePassword: boolean;
+  enableReadOnly: boolean;
+  enableOtp: boolean;
 
   // --- passwords
   passwordInvestor: string;
@@ -29,14 +29,14 @@ export interface User {
   status: string;
 
   // --- dates (MT4 timestamps = number)
-  regdate: number;
-  lastdate: number;
-  timestamp: number;
+  regdate: Date;
+  lastdate: Date;
+  timestamp: Date;
 
   // --- trade settings
   leverage: number;
   agentAccount: number;
-  lastIp: number;
+  lastIp: string;
 
   balance: number;
   prevMonthBalance: number;
@@ -59,23 +59,9 @@ export interface User {
   apiData: string;
 }
 
-export interface CreateUserInput {
-  login: number;
-  group: string;
-  name?: string;
-  email?: string;
-  leverage?: number;
-  password?: string;
-  investorPassword?: string;
-}
+export type CreateUserInput = Partial<User> & Pick<User, "group">;
 
-export interface UpdateUserInput {
-  login: number;
-  group?: string;
-  name?: string;
-  email?: string;
-  leverage?: number;
-}
+export type UpdateUserInput = Partial<User> & Pick<User, "login" | "group">;
 
 export interface ChangeUserPasswordInput {
   login: number;

@@ -17,6 +17,9 @@ public:
 
     void SetUpdateHandler(UpdateHandler handler);
 
+    int Create(UserRecord &user) const;
+    void Update(const UserRecord &user) const;
+
 private:
     void HandleEvent(int code, int type, void *data);
 

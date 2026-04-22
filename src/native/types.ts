@@ -8,8 +8,8 @@ import type {
 
 export interface NativeUsersApi {
   get(login: number): Promise<User>;
-  create(input: CreateUserInput): Promise<User>;
-  update(input: UpdateUserInput): Promise<User>;
+  create(input: CreateUserInput): Promise<number>;
+  update(input: UpdateUserInput): Promise<void>;
   delete(login: number): Promise<void>;
   changePassword(input: ChangeUserPasswordInput): Promise<void>;
 
@@ -18,8 +18,8 @@ export interface NativeUsersApi {
 
 export interface NativeFeature<T, C, U> {
   get(login: number): Promise<T>;
-  create(input: C): Promise<T>;
-  update(input: U): Promise<T>;
+  create(input: C): Promise<number>;
+  update(input: U): Promise<void>;
   delete(login: number): Promise<void>;
 
   _setUpdateHandler(handler: (user: T) => void): void;

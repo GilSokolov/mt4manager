@@ -13,4 +13,5 @@ export const config = {
   dllPath: path.resolve(requireEnv("MT4_DLL_PATH")),
   runSlowTests: process.env.MT4_SLOW_TESTS === "1",
   userLogin: Number(process.env.MT4_USER_LOGIN!),
+  testGroup: process.env.MT4_TEST_GROUP,
 };

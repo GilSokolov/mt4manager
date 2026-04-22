@@ -19,6 +19,8 @@ Napi::Function MT4UsersWrap::Init(Napi::Env env)
         "MT4Users",
         {
             InstanceMethod("get", &MT4UsersWrap::Get),
+            InstanceMethod("create", &MT4UsersWrap::Create),
+            InstanceMethod("update", &MT4UsersWrap::Update),
             InstanceMethod("_setUpdateHandler", &MT4UsersWrap::SetUpdateHandler),
         });
 
@@ -69,6 +71,65 @@ Napi::Value MT4UsersWrap::Get(const Napi::CallbackInfo &info)
     {
         const UserRecord user = users_->Get(login);
         return ToNapiUser(env, user);
+    }
+    catch (const std::exception &ex)
+    {
+        Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
+        return env.Null();
+    }
+}
+
+Napi::Value MT4UsersWrap::Create(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    if (info.Length() < 1 || !info[0].IsObject())
+    {
+        Napi::TypeError::New(env, "Expected (user: object)")
+            .ThrowAsJavaScriptException();
+        return env.Null();
+    }
+
+    try
+    {
+        UserRecord user = FromNapiUser(env, info[0].As<Napi::Object>());
+        const int login = users_->Create(user);
+
+        Napi::Number result = Napi::Number::New(env, login);
+
+        return result;
+    }
+    catch (const std::exception &ex)
+    {
+        Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
+        return env.Null();
+    }
+}
+
+Napi::Value MT4UsersWrap::Update(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    if (info.Length() < 1 || !info[0].IsObject())
+    {
+        Napi::TypeError::New(env, "Expected (user: object)")
+            .ThrowAsJavaScriptException();
+        return env.Null();
+    }
+
+    try
+    {
+        UserRecord user = FromNapiUser(env, info[0].As<Napi::Object>());
+
+        if (user.login <= 0)
+        {
+            Napi::TypeError::New(env, "Expected user.login for update")
+                .ThrowAsJavaScriptException();
+            return env.Null();
+        }
+
+        users_->Update(user);
+        return env.Undefined();
     }
     catch (const std::exception &ex)
     {
