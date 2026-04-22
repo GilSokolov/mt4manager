@@ -4,6 +4,8 @@
 
 #include "async_job.h"
 
+#include "pumping_options_napi.h"
+
 #include "./utils/napi_utils.h"
 
 #include "./utils/async_utils.h"
@@ -144,11 +146,17 @@ Napi::Value MT4ManagerWrap::StartPumping(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
 
+  PumpingOptions options{};
+  if (info.Length() > 0)
+  {
+    options = ParsePumpingOptions(info[0]);
+  }
+
   std::shared_ptr<MT4Client> client = client_;
 
-  auto task = [client]()
+  auto task = [client, options]()
   {
-    client->StartPumping();
+    client->StartPumping(options);
   };
 
   return async_utils::QueuePromise(env, "MT4Manager::StartPumping", task);
@@ -158,14 +166,28 @@ Napi::Value MT4ManagerWrap::StopPumping(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
 
-  try
+  std::shared_ptr<MT4Client> client = client_;
+
+  auto task = [client]()
   {
-    client_->StopPumping();
-    return env.Undefined();
-  }
-  catch (const std::exception &ex)
-  {
-    Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
-    return env.Null();
-  }
+    client->StopPumping();
+  };
+
+  return async_utils::QueuePromise(env, "MT4Manager::StopPumping", task);
 }
+
+// Napi::Value MT4ManagerWrap::IsPumping(const Napi::CallbackInfo &info)
+// {
+//   Napi::Env env = info.Env();
+
+//   try
+//   {
+//     client_->IsPumping();
+//     return env.Undefined();
+//   }
+//   catch (const std::exception &ex)
+//   {
+//     Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
+//     return env.Null();
+//   }
+// }

@@ -18,7 +18,7 @@ public:
     void SetUpdateHandler(UpdateHandler handler);
 
 private:
-    void HandleEvent(int code, int type, void *data, void *param);
+    void HandleEvent(int code, int type, void *data);
 
 private:
     std::shared_ptr<MT4Client> client_;

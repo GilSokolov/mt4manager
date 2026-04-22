@@ -1,3 +1,4 @@
+import { PumpingOptions } from "../types/misc";
 import type {
   ChangeUserPasswordInput,
   CreateUserInput,
@@ -29,8 +30,8 @@ export interface NativeMT4Manager {
   login(login: number, password: string): Promise<void>;
   disconnect(): Promise<void>;
   close(): void;
-  startPumping(): Promise<void>;
-  stopPumping(): void;
+  startPumping(options: PumpingOptions): Promise<void>;
+  stopPumping(): Promise<void>;
 
   users: NativeUsersApi;
 }

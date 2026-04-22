@@ -12,7 +12,8 @@
         "native/utils/mt4_errors.cc",
         "native/users/mt4_users.cc",
         "native/users/mt4_users_wrap.cc",
-        "native/users/mt4_user_converter.cc"
+        "native/users/mt4_user_converter.cc",
+        "native/pumping_options_napi.cc"
       ],
        "libraries": [
         "ws2_32.lib"

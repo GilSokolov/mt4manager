@@ -1,8 +1,30 @@
 #include <filesystem>
 
 #include "mt4_client.h"
+
 #include "utils/mt4_errors.h"
 #include "utils/mt4_log.h"
+
+int BuildPumpFlags(const PumpingOptions &options)
+{
+  int flags = 0;
+
+  if (!options.ticks)
+    flags |= CLIENT_FLAGS_HIDETICKS;
+  if (!options.news)
+    flags |= CLIENT_FLAGS_HIDENEWS;
+  if (!options.mail)
+    flags |= CLIENT_FLAGS_HIDEMAIL;
+  if (!options.onlineUsers)
+    flags |= CLIENT_FLAGS_HIDEONLINE;
+  if (!options.users)
+    flags |= CLIENT_FLAGS_HIDEUSERS;
+
+  if (options.fullNews)
+    flags |= CLIENT_FLAGS_SENDFULLNEWS;
+
+  return flags;
+}
 
 MT4Client::MT4Client(const std::string &dllPath) : dllPath_(dllPath)
 {
@@ -242,34 +264,28 @@ void MT4Client::ValidateDllPath() const
   }
 }
 
-MT4Client *MT4Client::active_pump_client_ = nullptr;
-
-void MT4Client::StartPumping()
+void MT4Client::StartPumping(const PumpingOptions &options)
 {
-  if (!manager_)
-  {
-    throw std::runtime_error("MT4 manager is not initialized");
-  }
+  EnsureManager();
 
   if (pumping_)
   {
     return;
   }
 
-  pump_flags_ = CLIENT_FLAGS_HIDETICKS | CLIENT_FLAGS_HIDENEWS |
-                CLIENT_FLAGS_HIDEMAIL | CLIENT_FLAGS_HIDEONLINE;
+  const int flags = BuildPumpFlags(options);
 
-  active_pump_client_ = this;
+  std::cerr << "[mt4] StartPumping begin flags=" << flags << std::endl;
 
-  std::cerr << "[mt4] StartPumping begin" << std::endl;
-  // const int code = manager_->PumpingSwitch(&PumpCallback, NULL, 0, pump_flags_);
-  const int code = manager_->PumpingSwitchEx(&PumpCallback, pump_flags_, nullptr);
+  TogglePumping(flags);
 
-  std::cerr << "[mt4] PumpingSwitch returned code=" << code << std::endl;
-  ThrowMt4Error("PumpingSwitch", code, manager_);
-  std::cerr << "[mt4] StartPumping success" << std::endl;
+  pump_flags_ = flags;
 
   pumping_ = true;
+
+  std::cerr << "[mt4] StartPumping success" << std::endl;
+
+  // manager_->SymbolAdd("USDMXN.");
 }
 
 void MT4Client::StopPumping()
@@ -279,18 +295,20 @@ void MT4Client::StopPumping()
     return;
   }
 
-  // Common MT4 pattern is PumpingSwitch(NULL, ...) to stop.
   std::cerr << "[mt4] StopPumping begin" << std::endl;
-  // const int code = manager_->PumpingSwitch(&PumpCallback, NULL, 0, pump_flags_);
-  const int code = manager_->PumpingSwitchEx(&PumpCallback, pump_flags_, nullptr);
-  ThrowMt4Error("PumpingSwitch", code, manager_);
-  std::cerr << "[mt4] StopPumping success" << std::endl;
+
+  TogglePumping(pump_flags_);
+
   pumping_ = false;
 
-  if (active_pump_client_ == this)
-  {
-    active_pump_client_ = nullptr;
-  }
+  std::cerr << "[mt4] StopPumping success" << std::endl;
+}
+
+void MT4Client::TogglePumping(int flags)
+{
+  const int code = manager_->PumpingSwitchEx(&PumpCallback, flags, this);
+  std::cerr << "[mt4] PumpingSwitchEx returned code=" << code << std::endl;
+  ThrowMt4Error("PumpingSwitchEx", code, manager_);
 }
 
 bool MT4Client::IsPumping() const
@@ -300,27 +318,23 @@ bool MT4Client::IsPumping() const
 
 void __stdcall MT4Client::PumpCallback(int code, int type, void *data, void *param)
 {
-  if (active_pump_client_)
+
+  auto *client = static_cast<MT4Client *>(param);
+  if (client)
   {
-    active_pump_client_->HandlePumpEvent(code, type, data, param);
+    client->NotifyPumpListeners(code, type, data);
   }
 }
 
-void MT4Client::HandlePumpEvent(int code, int type, void *data, void *param)
+void MT4Client::NotifyPumpListeners(int code, int type, void *data)
 {
 
-  std::vector<PumpListener> listeners;
-
-  {
-    std::lock_guard<std::mutex> lock(pump_listeners_mutex_);
-    listeners = pump_listeners_;
-  }
-
+  auto listeners = CopyPumpListeners();
   for (const auto &listener : listeners)
   {
     if (listener)
     {
-      listener(code, type, data, param);
+      listener(code, type, data);
     }
   }
 }
@@ -330,3 +344,41 @@ void MT4Client::AddPumpListener(PumpListener listener)
   std::lock_guard<std::mutex> lock(pump_listeners_mutex_);
   pump_listeners_.push_back(std::move(listener));
 }
+
+std::vector<MT4Client::PumpListener> MT4Client::CopyPumpListeners() const
+{
+  std::lock_guard<std::mutex> lock(pump_listeners_mutex_);
+  return pump_listeners_;
+}
+
+// void MT4Client::LogTicks()
+// {
+//   // if (!manager_)
+//   // {
+//   //   return;
+//   // }
+
+//   // SymbolInfo symbols[32];
+//   // int count = 32;
+
+//   // while (count > 0)
+//   // {
+//   //   count = 32;
+//   //   count = manager_->SymbolInfoUpdated(symbols, count);
+
+//   //   if (count > 0)
+//   //   {
+//   //     std::cerr << "[mt4] PUMP_UPDATE_BIDASK: " << count << " updated symbols" << std::endl;
+
+//   //     for (int i = 0; i < count; ++i)
+//   //     {
+
+//   //       std::cerr << "[tick] "
+//   //                 << symbols[i].symbol
+//   //                 << " bid=" << symbols[i].bid
+//   //                 << " ask=" << symbols[i].ask
+//   //                 << std::endl;
+//   //     }
+//   //   }
+//   // }
+// }

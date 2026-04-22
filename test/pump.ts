@@ -13,23 +13,22 @@ async function main() {
   console.log("[mt4] logged in");
 
   console.log("[mt4] starting pumping...");
-  await manager.startPumping();
+  await manager.startPumping({ ticks: false, users: true });
   console.log("[mt4] pumping started");
 
-  manager.users.watch(1821026789, (user) => {
+  const users = [];
+
+  manager.users.on("update", (user) => {
     console.log(user);
   });
 
-  
-
   await new Promise((resolve) => setTimeout(resolve, 30000));
 
-  manager.stopPumping();
+  await manager.stopPumping();
 
-  await new Promise((resolve) => setTimeout(resolve, 3000));
-  // console.log("[mt4] closing...");
-  // await manager.close();
-  // console.log("[mt4] closed");
+  console.log("users.length", users.length);
+
+  await manager.close();
 }
 
 main().catch((error) => {

@@ -11,12 +11,16 @@ MT4Users::MT4Users(const std::shared_ptr<MT4Client> &client)
     : client_(client)
 {
 
-    client_->AddPumpListener([this](int code, int type, void *data, void *param)
-                             { HandleEvent(code, type, data, param); });
+    client_->AddPumpListener(
+        [this](int code, int type, void *data)
+        {
+            HandleEvent(code, type, data);
+        });
 }
 
-void MT4Users::HandleEvent(int code, int type, void *data, void *param)
+void MT4Users::HandleEvent(int code, int type, void *data)
 {
+
     if (code != PUMP_UPDATE_USERS || !data)
     {
         return;

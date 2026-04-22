@@ -1,15 +1,19 @@
 #pragma once
 
 #include <atomic>
-#include <memory>
+#include <functional>
 #include <mutex>
 #include <string>
-#include <functional>
+#include <vector>
+
+#include "pumping_options.h"
 #include "../include/mt4_sdk.h"
 
 class MT4Client
 {
 public:
+  using PumpListener = std::function<void(int, int, void *)>;
+
   explicit MT4Client(const std::string &dllPath);
   ~MT4Client();
 
@@ -17,36 +21,40 @@ public:
   void Login(int login, const std::string &password);
   void Disconnect();
   void Close();
-  void StartPumping();
+
+  void StartPumping(const PumpingOptions &options);
   void StopPumping();
   bool IsPumping() const;
-
-  using PumpListener = std::function<void(int, int, void *, void *)>;
   void AddPumpListener(PumpListener listener);
 
   CManagerInterface *Manager() const { return manager_; }
 
-private:
+private: // callbacks
+  static void __stdcall PumpCallback(int code, int type, void *data, void *param);
+
+private: // helpers
   void LoadApi();
   void UnloadApi() noexcept;
   void EnsureOpen() const;
   void EnsureManager() const;
   void ValidateDllPath() const;
 
-private:
-  static void __stdcall PumpCallback(int code, int type, void *data, void *param);
+private: // pumping
+  void TogglePumping(int flags);
+  void NotifyPumpListeners(int code, int type, void *data);
+  std::vector<PumpListener> CopyPumpListeners() const;
 
-  void HandlePumpEvent(int code, int type, void *data, void *param);
-
-private:
+private: // state
   std::mutex mutex_;
+  mutable std::mutex pump_listeners_mutex_;
+
   std::atomic<bool> closed_{false};
   std::atomic<bool> pumping_{false};
-  std::mutex pump_listeners_mutex_;
-  std::vector<PumpListener> pump_listeners_;
-  std::string dllPath_;
 
-  static MT4Client *active_pump_client_;
+  std::vector<PumpListener> pump_listeners_;
+  int pump_flags_{0};
+
+  std::string dllPath_;
 
   CManagerFactory *factory_{nullptr};
   CManagerInterface *manager_{nullptr};
@@ -54,6 +62,4 @@ private:
   bool connected_{false};
   bool loggedIn_{false};
   bool winsockStarted_{false};
-
-  int pump_flags_ = 0;
 };
