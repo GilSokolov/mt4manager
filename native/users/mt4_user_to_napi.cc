@@ -8,7 +8,6 @@ Napi::Object ToNapiUser(Napi::Env env, const UserRecord &user)
     // --- common settings
     obj.Set("login", Napi::Number::New(env, user.login));
     obj.Set("group", SafeString(user.group, sizeof(user.group)));
-    // obj.Set("password", SafeString(user.password, sizeof(user.password)));
 
     // --- access flags
     obj.Set("enable", Napi::Boolean::New(env, user.enable != 0));
@@ -16,11 +15,7 @@ Napi::Object ToNapiUser(Napi::Env env, const UserRecord &user)
     obj.Set("enableReadOnly", Napi::Boolean::New(env, user.enable_read_only != 0));
     obj.Set("enableOtp", Napi::Boolean::New(env, user.enable_otp != 0));
 
-    // --- passwords
-    // obj.Set("passwordInvestor", SafeString(user.password_investor, sizeof(user.password_investor)));
-    // obj.Set("passwordPhone", SafeString(user.password_phone, sizeof(user.password_phone)));
-
-    // --- personal info
+        // --- personal info
     obj.Set("name", SafeString(user.name, sizeof(user.name)));
     obj.Set("country", SafeString(user.country, sizeof(user.country)));
     obj.Set("city", SafeString(user.city, sizeof(user.city)));
