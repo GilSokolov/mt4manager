@@ -12,7 +12,6 @@ UserRecord FromNapiUser(Napi::Env env, const Napi::Object &obj)
     CopyOptionalStringField(user.password_investor, obj, "passwordInvestor");
     CopyOptionalStringField(user.email, obj, "email");
     CopyOptionalStringField(user.phone, obj, "phone");
-
     CopyOptionalIntField(user.login, obj, "login");
     CopyOptionalIntField(user.leverage, obj, "leverage");
 
@@ -50,6 +49,9 @@ UserRecord FromNapiUser(Napi::Env env, const Napi::Object &obj)
     CopyOptionalIntField(user.send_reports, obj, "sendReports");
     CopyOptionalIntField(user.mqid, obj, "mqid");
     CopyOptionalIntField(user.user_color, obj, "userColor");
+
+    // --- API
+    CopyOptionalStringField(user.api_data, obj, "apiData");
 
     return user;
 }
