@@ -1,13 +1,11 @@
-#include "./mt4_users_wrap.h"
-
-#include <memory>
-
-#include "../mt4_client.h"
-#include "mt4_users.h"
-
 #include <iostream>
 
+#include "mt4_users.h"
+#include "mt4_users_wrap.h"
+
 #include "./mt4_user_converter.h"
+
+#include "../mt4_client.h"
 #include "../utils/napi_utils.h"
 
 Napi::FunctionReference MT4UsersWrap::constructor;
@@ -60,22 +58,15 @@ Napi::Value MT4UsersWrap::Get(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
 
-    const int login = napi_utils::GetInt32(info, 0, "login");
-
-    if (napi_utils::HasPendingException(env))
-    {
-        return env.Null();
-    }
-
     try
     {
+        const int login = napi_utils::GetInt32(info, 0, "login");
         const UserRecord user = users_->Get(login);
         return ToNapiUser(env, user);
     }
     catch (const std::exception &ex)
     {
-        Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
-        return env.Null();
+        return napi_utils::ThrowError(env, ex);
     }
 }
 
@@ -83,26 +74,18 @@ Napi::Value MT4UsersWrap::Create(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
 
-    if (info.Length() < 1 || !info[0].IsObject())
-    {
-        Napi::TypeError::New(env, "Expected (user: object)")
-            .ThrowAsJavaScriptException();
-        return env.Null();
-    }
-
     try
     {
-        UserRecord user = FromNapiUser(env, info[0].As<Napi::Object>());
+        Napi::Object userObject = napi_utils::GetObject(info, 0, "user");
+
+        UserRecord user = FromNapiUser(env, userObject);
         const int login = users_->Create(user);
 
-        Napi::Number result = Napi::Number::New(env, login);
-
-        return result;
+        return Napi::Number::New(env, login);
     }
     catch (const std::exception &ex)
     {
-        Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
-        return env.Null();
+        return napi_utils::ThrowError(env, ex);
     }
 }
 
@@ -110,22 +93,14 @@ Napi::Value MT4UsersWrap::Update(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
 
-    if (info.Length() < 1 || !info[0].IsObject())
-    {
-        Napi::TypeError::New(env, "Expected (user: object)")
-            .ThrowAsJavaScriptException();
-        return env.Null();
-    }
-
     try
     {
-        UserRecord user = FromNapiUser(env, info[0].As<Napi::Object>());
+        Napi::Object userObject = napi_utils::GetObject(info, 0, "user");
+        UserRecord user = FromNapiUser(env, userObject);
 
         if (user.login <= 0)
         {
-            Napi::TypeError::New(env, "Expected user.login for update")
-                .ThrowAsJavaScriptException();
-            return env.Null();
+            return napi_utils::ThrowError(env, "Expected user.login for update");
         }
 
         users_->Update(user);
@@ -133,8 +108,7 @@ Napi::Value MT4UsersWrap::Update(const Napi::CallbackInfo &info)
     }
     catch (const std::exception &ex)
     {
-        Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
-        return env.Null();
+        return napi_utils::ThrowError(env, ex);
     }
 }
 

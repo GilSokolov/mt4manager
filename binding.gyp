@@ -7,8 +7,6 @@
         "native/mt4_manager_wrap.cc",
         "native/mt4_client.cc",
         "native/async_job.cc",
-        "native/memory.cc",
-        "native/utils/win32_error.cc",
         "native/utils/mt4_errors.cc",
         "native/users/mt4_users.cc",
         "native/users/mt4_users_wrap.cc",

@@ -42,15 +42,9 @@ MT4ManagerWrap::MT4ManagerWrap(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
 
-  const std::string dllPath = napi_utils::GetString(info, 0, "dllPath");
-
-  if (napi_utils::HasPendingException(env))
-  {
-    return;
-  }
-
   try
   {
+    const std::string dllPath = napi_utils::GetString(info, 0, "dllPath");
     client_ = std::make_shared<MT4Client>(dllPath);
     Napi::Object users = MT4UsersWrap::NewInstance(env, client_);
     users_ = Napi::Persistent(users);
@@ -59,7 +53,7 @@ MT4ManagerWrap::MT4ManagerWrap(const Napi::CallbackInfo &info)
   }
   catch (const std::exception &ex)
   {
-    Napi::Error::New(env, ex.what()).ThrowAsJavaScriptException();
+    napi_utils::ThrowError(env, ex);
   }
 }
 
@@ -75,71 +69,81 @@ Napi::Value MT4ManagerWrap::Connect(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
 
-  const std::string server = napi_utils::GetString(info, 0, "server");
-
-  if (napi_utils::HasPendingException(env))
+  try
   {
-    return env.Null();
+    const std::string server = napi_utils::GetString(info, 0, "server");
+
+    auto task = [client = client_, server]()
+    {
+      client->Connect(server);
+    };
+
+    return async_utils::QueuePromise(env, "MT4Manager::connect", task);
   }
-
-  std::shared_ptr<MT4Client> client = client_;
-
-  auto task = [client, server]()
+  catch (const std::exception &ex)
   {
-    client->Connect(server);
-  };
-
-  return async_utils::QueuePromise(env, "MT4Manager::connect", task);
+    return napi_utils::ThrowError(env, ex);
+  }
 }
 
 Napi::Value MT4ManagerWrap::Login(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
 
-  const int login = napi_utils::GetInt32(info, 0, "login");
-  const std::string password = napi_utils::GetString(info, 1, "password");
-
-  if (napi_utils::HasPendingException(env))
+  try
   {
-    return env.Null();
+    const int login = napi_utils::GetInt32(info, 0, "login");
+    const std::string password = napi_utils::GetString(info, 1, "password");
+
+    auto task = [client = client_, login, password]()
+    {
+      client->Login(login, password);
+    };
+
+    return async_utils::QueuePromise(env, "MT4Manager::login", task);
   }
-
-  std::shared_ptr<MT4Client> client = client_;
-
-  auto task = [client, login, password]()
+  catch (const std::exception &ex)
   {
-    client->Login(login, password);
-  };
-
-  return async_utils::QueuePromise(env, "MT4Manager::login", task);
+    return napi_utils::ThrowError(env, ex);
+  }
 }
 
 Napi::Value MT4ManagerWrap::Disconnect(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
 
-  std::shared_ptr<MT4Client> client = client_;
-
-  auto task = [client]()
+  try
   {
-    client->Disconnect();
-  };
+    auto task = [client = client_]()
+    {
+      client->Disconnect();
+    };
 
-  return async_utils::QueuePromise(env, "MT4Manager::disconnect", task);
+    return async_utils::QueuePromise(env, "MT4Manager::disconnect", task);
+  }
+  catch (const std::exception &ex)
+  {
+    return napi_utils::ThrowError(env, ex);
+  }
 }
 
 Napi::Value MT4ManagerWrap::Close(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
 
-  std::shared_ptr<MT4Client> client = client_;
-
-  auto task = [client]()
+  try
   {
-    client->Close();
-  };
+    auto task = [client = client_]()
+    {
+      client->Close();
+    };
 
-  return async_utils::QueuePromise(env, "MT4Manager::close", task);
+    return async_utils::QueuePromise(env, "MT4Manager::close", task);
+  }
+  catch (const std::exception &ex)
+  {
+    return napi_utils::ThrowError(env, ex);
+  }
 }
 
 Napi::Value MT4ManagerWrap::StartPumping(const Napi::CallbackInfo &info)
@@ -152,9 +156,7 @@ Napi::Value MT4ManagerWrap::StartPumping(const Napi::CallbackInfo &info)
     options = ParsePumpingOptions(info[0]);
   }
 
-  std::shared_ptr<MT4Client> client = client_;
-
-  auto task = [client, options]()
+  auto task = [client = client_, options]()
   {
     client->StartPumping(options);
   };
@@ -166,9 +168,7 @@ Napi::Value MT4ManagerWrap::StopPumping(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
 
-  std::shared_ptr<MT4Client> client = client_;
-
-  auto task = [client]()
+  auto task = [client = client_]()
   {
     client->StopPumping();
   };

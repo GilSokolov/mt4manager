@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-
+#include <stdexcept>
 #include <napi.h>
 
 class MT4Client;
