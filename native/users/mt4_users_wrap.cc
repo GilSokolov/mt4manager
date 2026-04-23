@@ -38,7 +38,7 @@ Napi::Object MT4UsersWrap::NewInstance(
 
     Napi::Object obj = constructor.New({});
     MT4UsersWrap *wrap = Napi::ObjectWrap<MT4UsersWrap>::Unwrap(obj);
-    wrap->users_ = std::make_shared<MT4Users>(client);
+    wrap->users_ = MT4Users::CreateShared(client);
 
     return scope.Escape(napi_value(obj)).ToObject();
 }

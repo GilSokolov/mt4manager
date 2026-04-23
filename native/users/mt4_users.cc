@@ -1,26 +1,41 @@
-#include <stdexcept>
 #include <cstring>
 #include <iostream>
+#include <stdexcept>
+#include <utility>
 
 #include "./mt4_users.h"
-#include "../mt4_client.h"
 #include "../include/mt4_sdk.h"
+#include "../mt4_client.h"
 #include "../utils/mt4_errors.h"
 
 MT4Users::MT4Users(const std::shared_ptr<MT4Client> &client)
     : client_(client)
 {
+}
+
+std::shared_ptr<MT4Users> MT4Users::CreateShared(const std::shared_ptr<MT4Client> &client)
+{
+    auto users = std::shared_ptr<MT4Users>(new MT4Users(client));
+    users->AttachPumpListener();
+    return users;
+}
+
+void MT4Users::AttachPumpListener()
+{
+    std::weak_ptr<MT4Users> weak_self = shared_from_this();
 
     client_->AddPumpListener(
-        [this](int code, int type, void *data)
+        [weak_self](int code, int type, void *data)
         {
-            HandleEvent(code, type, data);
+            if (auto self = weak_self.lock())
+            {
+                self->HandleEvent(code, type, data);
+            }
         });
 }
 
 void MT4Users::HandleEvent(int code, int type, void *data)
 {
-
     if (code != PUMP_UPDATE_USERS || !data)
     {
         return;
@@ -28,14 +43,21 @@ void MT4Users::HandleEvent(int code, int type, void *data)
 
     const UserRecord *user = static_cast<const UserRecord *>(data);
 
-    if (update_handler_)
+    UpdateHandler handler;
     {
-        update_handler_(user);
+        std::lock_guard<std::mutex> lock(update_handler_mutex_);
+        handler = update_handler_;
+    }
+
+    if (handler)
+    {
+        handler(user);
     }
 }
 
 void MT4Users::SetUpdateHandler(UpdateHandler handler)
 {
+    std::lock_guard<std::mutex> lock(update_handler_mutex_);
     update_handler_ = std::move(handler);
 }
 
