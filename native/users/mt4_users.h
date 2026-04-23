@@ -12,6 +12,7 @@ class MT4Client;
 class MT4Users : public std::enable_shared_from_this<MT4Users>
 {
 public:
+    ~MT4Users();
     using UpdateHandler = std::function<void(const UserRecord *)>;
 
     static std::shared_ptr<MT4Users> CreateShared(const std::shared_ptr<MT4Client> &client);
@@ -25,11 +26,15 @@ public:
 
 private:
     explicit MT4Users(const std::shared_ptr<MT4Client> &client);
+
     void AttachPumpListener();
+    void DetachPumpListener();
+
     void HandleEvent(int code, int type, void *data);
 
 private:
     std::shared_ptr<MT4Client> client_;
     UpdateHandler update_handler_;
     mutable std::mutex update_handler_mutex_;
+    int pump_listener_id_ = -1;
 };

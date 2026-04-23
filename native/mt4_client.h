@@ -25,7 +25,8 @@ public:
   void StartPumping(const PumpingOptions &options);
   void StopPumping();
   bool IsPumping() const;
-  void AddPumpListener(PumpListener listener);
+  int AddPumpListener(PumpListener listener);
+  void RemovePumpListener(int id);
 
   CManagerInterface *Manager() const { return manager_; }
 
@@ -52,12 +53,13 @@ private: // state
   std::atomic<bool> pumping_{false};
 
   std::vector<PumpListener> pump_listeners_;
-  int pump_flags_{0};
 
   std::string dllPath_;
 
   CManagerFactory *factory_{nullptr};
   CManagerInterface *manager_{nullptr};
+
+  int pump_flags_{0};
 
   bool connected_{false};
   bool loggedIn_{false};

@@ -339,10 +339,24 @@ void MT4Client::NotifyPumpListeners(int code, int type, void *data)
   }
 }
 
-void MT4Client::AddPumpListener(PumpListener listener)
+int MT4Client::AddPumpListener(PumpListener listener)
 {
   std::lock_guard<std::mutex> lock(pump_listeners_mutex_);
+
   pump_listeners_.push_back(std::move(listener));
+  return static_cast<int>(pump_listeners_.size() - 1);
+}
+
+void MT4Client::RemovePumpListener(int id)
+{
+  std::lock_guard<std::mutex> lock(pump_listeners_mutex_);
+
+  if (id < 0 || id >= static_cast<int>(pump_listeners_.size()))
+  {
+    return;
+  }
+
+  pump_listeners_[id] = PumpListener{};
 }
 
 std::vector<MT4Client::PumpListener> MT4Client::CopyPumpListeners() const

@@ -13,6 +13,15 @@ MT4Users::MT4Users(const std::shared_ptr<MT4Client> &client)
 {
 }
 
+MT4Users::~MT4Users()
+{
+    if (client_ && pump_listener_id_ >= 0)
+    {
+        client_->RemovePumpListener(pump_listener_id_);
+        pump_listener_id_ = -1;
+    }
+}
+
 std::shared_ptr<MT4Users> MT4Users::CreateShared(const std::shared_ptr<MT4Client> &client)
 {
     auto users = std::shared_ptr<MT4Users>(new MT4Users(client));
@@ -24,7 +33,7 @@ void MT4Users::AttachPumpListener()
 {
     std::weak_ptr<MT4Users> weak_self = shared_from_this();
 
-    client_->AddPumpListener(
+    pump_listener_id_ = client_->AddPumpListener(
         [weak_self](int code, int type, void *data)
         {
             if (auto self = weak_self.lock())
@@ -32,6 +41,15 @@ void MT4Users::AttachPumpListener()
                 self->HandleEvent(code, type, data);
             }
         });
+}
+
+void MT4Users::DetachPumpListener()
+{
+    if (pump_listener_id_ != -1)
+    {
+        client_->RemovePumpListener(pump_listener_id_);
+        pump_listener_id_ = -1;
+    }
 }
 
 void MT4Users::HandleEvent(int code, int type, void *data)
