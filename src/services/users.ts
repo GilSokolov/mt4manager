@@ -47,8 +47,6 @@ export class UsersService extends EventEmitter {
     return this.native.update({
       ...input,
       group: input.group,
-      name: this.normalizeString(input.name),
-      email: this.normalizeString(input.email),
     });
   }
 

@@ -101,6 +101,6 @@ function normalizePumpingOptions(
     fullNews: options.fullNews ?? false,
     mail: options.mail ?? false,
     onlineUsers: options.onlineUsers ?? false,
-    users: options.users ?? false,
+    users: options.users ?? true,
   };
 }

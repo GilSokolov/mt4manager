@@ -40,6 +40,19 @@ namespace napi_utils
         return info[index].As<Napi::Object>();
     }
 
+    inline Napi::Function GetFunction(
+        const Napi::CallbackInfo &info,
+        size_t index,
+        const char *name)
+    {
+        if (info.Length() <= index || !info[index].IsFunction())
+        {
+            throw std::invalid_argument(std::string("Expected function for argument: ") + name);
+        }
+
+        return info[index].As<Napi::Function>();
+    }
+
     inline Napi::Value ThrowError(Napi::Env env, const std::string &msg)
     {
         Napi::Error::New(env, msg).ThrowAsJavaScriptException();

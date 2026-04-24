@@ -7,3 +7,12 @@
 Napi::Object ToNapiUser(Napi::Env env, const UserRecord &user);
 
 UserRecord FromNapiUser(Napi::Env env, const Napi::Object &obj);
+
+struct UserPayload
+{
+    UserRecord user;
+};
+
+std::vector<napi_value> BuildUserArgs(
+    Napi::Env env,
+    const UserPayload &payload);

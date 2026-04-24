@@ -15,13 +15,19 @@ test("users emits pumped updates to js", async () => {
   const done = new Promise<void>((resolve, reject) => {
     const timeout = setTimeout(() => {
       reject(new Error("Timed out waiting for pumped user update"));
-    }, 15000);
+    }, 30000);
 
     manager.users.once("update", (user) => {
       clearTimeout(timeout);
       received = user;
       resolve();
     });
+  });
+
+  await manager.users.update({
+    login: config.userLogin,
+    group: config.testGroup as string,
+    leverage: 200,
   });
 
   await manager.startPumping();

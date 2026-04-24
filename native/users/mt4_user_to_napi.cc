@@ -1,6 +1,15 @@
 #include "./mt4_user_converter.h"
 #include "../utils/napi_converter_utils.h"
 
+std::vector<napi_value> BuildUserArgs(
+    Napi::Env env,
+    const UserPayload &payload)
+{
+    return {
+        ToNapiUser(env, payload.user),
+    };
+}
+
 Napi::Object ToNapiUser(Napi::Env env, const UserRecord &user)
 {
     Napi::Object obj = Napi::Object::New(env);
@@ -15,7 +24,7 @@ Napi::Object ToNapiUser(Napi::Env env, const UserRecord &user)
     obj.Set("enableReadOnly", Napi::Boolean::New(env, user.enable_read_only != 0));
     obj.Set("enableOtp", Napi::Boolean::New(env, user.enable_otp != 0));
 
-        // --- personal info
+    // --- personal info
     obj.Set("name", SafeString(user.name, sizeof(user.name)));
     obj.Set("country", SafeString(user.country, sizeof(user.country)));
     obj.Set("city", SafeString(user.city, sizeof(user.city)));

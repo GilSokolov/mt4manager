@@ -4,6 +4,9 @@
 #include <stdexcept>
 #include <napi.h>
 
+#include "./mt4_user_converter.h"
+#include "../utils/js_callback_bridge.h"
+
 class MT4Client;
 class MT4Users;
 
@@ -28,5 +31,5 @@ private:
     Napi::Value SetUpdateHandler(const Napi::CallbackInfo &info);
 
     std::shared_ptr<MT4Users> users_;
-    Napi::ThreadSafeFunction update_tsfn_;
+    std::shared_ptr<JsCallbackBridge<UserPayload>> update_bridge_;
 };
