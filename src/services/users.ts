@@ -1,18 +1,16 @@
 import { EventEmitter } from "node:events";
-import { NativeFeature } from "../native/types";
-import { Listener } from "../types/misc";
-import { CreateUserInput, UpdateUserInput, User } from "../types/user";
+import { Listener } from "../types/manager";
+import {
+  CreateUserInput,
+  NativeUsersApi,
+  UpdateUserInput,
+  User,
+} from "../types/user";
 
 type UserListener = Listener<User>;
 
 export class UsersService extends EventEmitter {
-  constructor(
-    private readonly native: NativeFeature<
-      User,
-      CreateUserInput,
-      UpdateUserInput
-    >,
-  ) {
+  constructor(private readonly native: NativeUsersApi) {
     super();
     this.native._setUpdateHandler((user) => {
       this.emit("update", user);
@@ -28,31 +26,11 @@ export class UsersService extends EventEmitter {
   }
 
   create(input: CreateUserInput) {
-    this.assertRequiredString(input.group, "group");
-
-    return this.native.create({
-      ...input,
-      name: this.normalizeString(input.name),
-      email: this.normalizeString(input.email),
-      password: this.normalizeString(input.password),
-      passwordInvestor: this.normalizeString(input.passwordInvestor),
-    });
+    return this.native.create(input);
   }
 
-  update(input: UpdateUserInput) {
-    this.assertLogin(input.login);
-
-    this.assertRequiredString(input.group, "group");
-
-    return this.native.update({
-      ...input,
-      group: input.group,
-    });
-  }
-
-  delete(login: number) {
-    this.assertLogin(login);
-    return this.native.delete(login);
+  update(login: number, input: UpdateUserInput) {
+    return this.native.update(login, input);
   }
 
   watch(target: number, listener: UserListener) {
@@ -95,17 +73,6 @@ export class UsersService extends EventEmitter {
       listener(user);
     }
   }
-
-  // public changePassword(input: ChangeUserPasswordInput) {
-  //   this.assertLogin(input.login);
-  //   this.assertRequiredString(input.password, "password");
-
-  //   return this.native.changePassword({
-  //     ...input,
-  //     password: input.password.trim(),
-  //     investor: input.investor ?? false,
-  //   });
-  // }
 
   private assertLogin(login: number): void {
     if (!Number.isInteger(login) || login <= 0) {

@@ -61,10 +61,18 @@ export interface User {
 
 export type CreateUserInput = Partial<User> & Pick<User, "group">;
 
-export type UpdateUserInput = Partial<User> & Pick<User, "login" | "group">;
+export type UpdateUserInput = Partial<Omit<User, "login">>;
 
 export interface ChangeUserPasswordInput {
   login: number;
   password: string;
   investor?: boolean;
+}
+
+export interface NativeUsersApi {
+  get(login: number): Promise<User>;
+  create(input: CreateUserInput): Promise<User>;
+  update(login: number, input: UpdateUserInput): Promise<User>;
+
+  _setUpdateHandler(handler: (user: User) => void): void;
 }

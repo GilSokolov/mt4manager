@@ -78,10 +78,13 @@ Napi::Value MT4UsersWrap::Create(const Napi::CallbackInfo &info)
     {
         Napi::Object userObject = napi_utils::GetObject(info, 0, "user");
 
-        UserRecord user = FromNapiUser(env, userObject);
-        const int login = users_->Create(user);
+        UserRecord data = FromNapiUser(env, userObject);
 
-        return Napi::Number::New(env, login);
+        const int login = users_->Create(data);
+
+        UserRecord user = users_->Get(login);
+
+        return ToNapiUser(env, user);
     }
     catch (const std::exception &ex)
     {
@@ -95,16 +98,18 @@ Napi::Value MT4UsersWrap::Update(const Napi::CallbackInfo &info)
 
     try
     {
-        Napi::Object userObject = napi_utils::GetObject(info, 0, "user");
-        UserRecord user = FromNapiUser(env, userObject);
+        const int login = napi_utils::GetInt32(info, 0, "login");
+        Napi::Object patch = napi_utils::GetObject(info, 1, "data");
 
-        if (user.login <= 0)
-        {
-            return napi_utils::ThrowError(env, "Expected user.login for update");
-        }
+        UserRecord user = users_->Get(login);
+
+        ApplyNapiUserPatch(env, patch, user);
+
+        user.login = login;
 
         users_->Update(user);
-        return env.Undefined();
+
+        return ToNapiUser(env, user);
     }
     catch (const std::exception &ex)
     {

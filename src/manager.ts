@@ -1,8 +1,8 @@
-import { NativeMT4Manager } from "./native/types";
 import { PumpingService } from "./services/pumping";
 import { TradesService } from "./services/trades";
 import { UsersService } from "./services/users";
-import { PumpingOptions } from "./types/misc";
+import { NativeMT4Manager, PumpingOptions } from "./types/manager";
+
 import { loadBinding } from "./utils/paths";
 
 const nativeBinding = loadBinding();

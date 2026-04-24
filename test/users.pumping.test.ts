@@ -24,12 +24,6 @@ test("users emits pumped updates to js", async () => {
     });
   });
 
-  await manager.users.update({
-    login: config.userLogin,
-    group: config.testGroup as string,
-    leverage: 200,
-  });
-
   await manager.startPumping();
 
   await done;

@@ -48,41 +48,83 @@ test("users.get should reject invalid login", () => {
   manager.close();
 });
 
-// test("users.create creates a new user and returns login", async (t) => {
-//   const manager = await openManager();
+test("users.create validates arguments", async (t) => {
+  const manager = await openManager();
 
-//   t.after(() => {
-//     manager.close();
-//   });
+  t.after(() => {
+    manager.close();
+  });
 
-//   const email = uniqueEmail("create");
-//   const name = uniqueName("Create");
-//   const group = config.testGroup;
+  assert.rejects(
+    () => (manager.users.create as any)(),
+    /Expected object for argument: user/,
+  );
 
-//   if (!group) {
-//     throw new Error("MT4_TEST_GROUP is required for tests");
-//   }
+  assert.rejects(
+    () => (manager.users.create as any)("bad"),
+    /Expected object for argument: user/,
+  );
+});
 
-//   const login = await manager.users.create({
-//     group,
-//     name,
-//     email,
-//     password: "Secret123!",
-//     passwordInvestor: "Investor123!",
-//     leverage: 100,
-//   });
+test("users.update validates arguments", async (t) => {
+  const manager = await openManager();
 
-//   assert.equal(typeof login, "number");
-//   assert.ok(login > 0);
+  t.after(() => {
+    manager.close();
+  });
 
-//   const user = await manager.users.get(login);
+  assert.rejects(
+    () => (manager.users.update as any)(),
+    /Expected number for argument: login/,
+  );
 
-//   assert.equal(user.login, login);
-//   assert.equal(user.name, name);
-//   assert.equal(user.email, email);
-//   assert.equal(user.group, group);
-//   assert.equal(user.leverage, 100);
-// });
+  assert.rejects(
+    () => (manager.users.update as any)({ name: "bad" }, { name: "test" }),
+    /Expected number for argument: login/,
+  );
+
+  assert.rejects(
+    () => (manager.users.update as any)(config.userLogin),
+    /Expected object for argument: data/,
+  );
+
+  assert.rejects(
+    () => (manager.users.update as any)(config.userLogin, "bad"),
+    /Expected object for argument: data/,
+  );
+});
+
+test("users.create creates a new user and returns login", async (t) => {
+  const manager = await openManager();
+
+  t.after(() => {
+    manager.close();
+  });
+
+  const email = uniqueEmail("create");
+  const name = uniqueName("Create");
+  const group = config.testGroup;
+
+  if (!group) {
+    throw new Error("MT4_TEST_GROUP is required for tests");
+  }
+
+  const user = await manager.users.create({
+    group,
+    name,
+    email,
+    password: "Secret123!",
+    passwordInvestor: "Investor123!",
+    leverage: 100,
+  });
+
+  assert.ok(user);
+
+  assert.equal(user.name, name);
+  assert.equal(user.email, email);
+  assert.equal(user.group, group);
+  assert.equal(user.leverage, 100);
+});
 
 test("users.update updates an existing user", async (t) => {
   const manager = await openManager();
@@ -97,7 +139,7 @@ test("users.update updates an existing user", async (t) => {
     throw new Error("MT4_TEST_GROUP is required for tests");
   }
 
-  const login = await manager.users.create({
+  const res = await manager.users.create({
     group,
     name: uniqueName("Before Update"),
     email: uniqueEmail("before_update"),
@@ -106,26 +148,19 @@ test("users.update updates an existing user", async (t) => {
     leverage: 100,
   });
 
-  assert.equal(typeof login, "number");
-  assert.ok(login > 0);
+  assert.equal(typeof res.login, "number");
+  assert.ok(res.login > 0);
 
   const updatedName = uniqueName("After Update");
   const updatedEmail = uniqueEmail("after_update");
 
-  await manager.users.update({
-    login,
-    group,
+  const user = await manager.users.update(res.login, {
     name: updatedName,
     email: updatedEmail,
     leverage: 200,
-    enable: true
   });
 
-  const user = await manager.users.get(login);
-
-  console.log(user);
-
-  assert.equal(user.login, login);
+  assert.equal(user.login, res.login);
   assert.equal(user.name, updatedName);
   assert.equal(user.email, updatedEmail);
   assert.equal(user.group, group);

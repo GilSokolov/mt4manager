@@ -8,6 +8,11 @@ Napi::Object ToNapiUser(Napi::Env env, const UserRecord &user);
 
 UserRecord FromNapiUser(Napi::Env env, const Napi::Object &obj);
 
+void ApplyNapiUserPatch(
+    Napi::Env env,
+    const Napi::Object &obj,
+    UserRecord &user);
+
 struct UserPayload
 {
     UserRecord user;

@@ -3,7 +3,16 @@
 
 UserRecord FromNapiUser(Napi::Env env, const Napi::Object &obj)
 {
-    UserRecord user{}; // already zeroed
+    UserRecord user{};
+    ApplyNapiUserPatch(env, obj, user);
+    return user;
+}
+
+void ApplyNapiUserPatch(
+    Napi::Env env,
+    const Napi::Object &obj,
+    UserRecord &user)
+{
 
     // --- CORE ---
     CopyOptionalStringField(user.group, obj, "group");
@@ -52,6 +61,4 @@ UserRecord FromNapiUser(Napi::Env env, const Napi::Object &obj)
 
     // --- API
     CopyOptionalStringField(user.api_data, obj, "apiData");
-
-    return user;
 }
