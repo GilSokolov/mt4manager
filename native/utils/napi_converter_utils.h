@@ -26,6 +26,18 @@ inline void CopyString(char (&dest)[N], const std::string &src)
 
 // ---------- READERS ----------
 
+inline std::string GetString(const Napi::Object &obj, const char *key)
+{
+    if (!obj.Has(key))
+        throw std::runtime_error(std::string("Expected: ") + key);
+
+    Napi::Value v = obj.Get(key);
+    if (!v.IsString())
+        throw std::runtime_error(std::string("Expected string: ") + key);
+
+    return v.As<Napi::String>().Utf8Value();
+}
+
 inline std::string GetOptionalString(const Napi::Object &obj, const char *key)
 {
     if (!obj.Has(key))
@@ -48,6 +60,20 @@ inline int GetOptionalInt(const Napi::Object &obj, const char *key, int fallback
         throw std::runtime_error(std::string("Expected number: ") + key);
 
     return v.As<Napi::Number>().Int32Value();
+}
+
+inline bool GetOptionalBool(const Napi::Object &obj, const char *key, bool fallback = false)
+{
+    if (!obj.Has(key))
+        return fallback;
+
+    Napi::Value v = obj.Get(key);
+
+    if (v.IsBoolean())
+        return v.As<Napi::Boolean>().Value();
+
+    throw std::runtime_error(
+        std::string("Expected boolean for field: ") + key);
 }
 
 inline int GetOptionalBoolAsInt(const Napi::Object &obj, const char *key, int fallback = 0)

@@ -26,7 +26,8 @@ int BuildPumpFlags(const PumpingOptions &options)
   return flags;
 }
 
-MT4Client::MT4Client(const std::string &dllPath) : dllPath_(dllPath)
+MT4Client::MT4Client(MT4ClientConfig config)
+    : config_(std::move(config))
 {
   ValidateDllPath();
   LoadApi();
@@ -49,7 +50,7 @@ void MT4Client::LoadApi()
 
   try
   {
-    factory_ = new CManagerFactory(dllPath_.c_str());
+    factory_ = new CManagerFactory(config_.dllPath.c_str());
     MT4_DEBUG_LOG("factory constructed");
 
     const int winsockCode = factory_->WinsockStartup();
@@ -248,17 +249,17 @@ void MT4Client::Close()
 
 void MT4Client::ValidateDllPath() const
 {
-  if (dllPath_.empty())
+  if (config_.dllPath.empty())
   {
     throw std::runtime_error("MT4 DLL path is empty");
   }
 
-  if (!std::filesystem::exists(dllPath_))
+  if (!std::filesystem::exists(config_.dllPath))
   {
     throw std::runtime_error("MT4 DLL path does not exist");
   }
 
-  if (!std::filesystem::is_regular_file(dllPath_))
+  if (!std::filesystem::is_regular_file(config_.dllPath))
   {
     throw std::runtime_error("MT4 DLL path is not a file");
   }

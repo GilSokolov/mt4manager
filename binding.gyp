@@ -6,6 +6,7 @@
         "native/addon.cc",
         "native/mt4_manager_wrap.cc",
         "native/mt4_client.cc",
+        "native/mt4_client_config.cc",
         "native/async_job.cc",
         "native/utils/mt4_errors.cc",
         "native/users/mt4_users.cc",

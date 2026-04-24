@@ -1,7 +1,11 @@
 import { PumpingService } from "./services/pumping";
 import { TradesService } from "./services/trades";
 import { UsersService } from "./services/users";
-import { NativeMT4Manager, PumpingOptions } from "./types/manager";
+import {
+  ManagerConfig,
+  NativeMT4Manager,
+  PumpingOptions,
+} from "./types/manager";
 
 import { loadBinding } from "./utils/paths";
 
@@ -16,15 +20,16 @@ export default class MT4Manager {
   #pumping = false;
   #pumpConfig: PumpingOptions = normalizePumpingOptions();
 
-  constructor(config: { dllPath: string });
+  constructor(config: ManagerConfig);
   constructor(dllPath: string);
 
-  constructor(options: string | { dllPath: string }) {
-    const config = typeof options === "string" ? { dllPath: options } : options;
+  constructor(options: string | ManagerConfig) {
+    const config =
+      typeof options === "string"
+        ? { dllPath: options, debug: false }
+        : options;
 
-    this.native = new nativeBinding.MT4Manager(
-      config.dllPath,
-    ) as NativeMT4Manager;
+    this.native = new nativeBinding.MT4Manager(config);
     this.users = new UsersService(this.native.users);
     this.trades = new TradesService(this.native);
   }

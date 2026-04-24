@@ -6,6 +6,8 @@
 
 #include "pumping_options_napi.h"
 
+#include "mt4_client_config.h"
+
 #include "./utils/napi_utils.h"
 
 #include "./utils/async_utils.h"
@@ -50,11 +52,12 @@ MT4ManagerWrap::MT4ManagerWrap(const Napi::CallbackInfo &info)
   {
     // Extract the DLL path from JS constructor arguments.
     // Expected usage from JS: new MT4Manager(dllPath)
-    const std::string dllPath = napi_utils::GetString(info, 0, "dllPath");
+    Napi::Object configObj = napi_utils::GetObject(info, 0, "config");
+    MT4ClientConfig config = FromNapiClientConfig(env, configObj);
 
     // Create the core MT4 client.
     // Stored as shared_ptr so it can be safely shared across submodules (e.g. users).
-    client_ = std::make_shared<MT4Client>(dllPath);
+    client_ = std::make_shared<MT4Client>(config);
 
     // Create the "users" wrapper object and inject the same client instance.
     // This ensures all modules operate on the same underlying MT4 connection.

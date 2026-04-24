@@ -7,6 +7,8 @@
 #include <vector>
 
 #include "pumping_options.h"
+#include "mt4_client_config.h"
+
 #include "../include/mt4_sdk.h"
 
 class MT4Client
@@ -14,7 +16,7 @@ class MT4Client
 public:
   using PumpListener = std::function<void(int, int, void *)>;
 
-  explicit MT4Client(const std::string &dllPath);
+  explicit MT4Client(MT4ClientConfig config);
   ~MT4Client();
 
   void Connect(const std::string &server);
@@ -46,6 +48,8 @@ private: // pumping
   std::vector<PumpListener> CopyPumpListeners() const;
 
 private: // state
+  MT4ClientConfig config_;
+
   std::mutex mutex_;
   mutable std::mutex pump_listeners_mutex_;
 
@@ -53,8 +57,6 @@ private: // state
   std::atomic<bool> pumping_{false};
 
   std::vector<PumpListener> pump_listeners_;
-
-  std::string dllPath_;
 
   CManagerFactory *factory_{nullptr};
   CManagerInterface *manager_{nullptr};

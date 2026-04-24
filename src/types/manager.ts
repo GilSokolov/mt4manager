@@ -11,6 +11,11 @@ export type PumpingOptions = {
   fullNews: boolean;
 };
 
+export type ManagerConfig = {
+  dllPath: string;
+  debug?: boolean;
+};
+
 export interface NativeMT4Manager {
   connect(server: string): Promise<void>;
   login(login: number, password: string): Promise<void>;
