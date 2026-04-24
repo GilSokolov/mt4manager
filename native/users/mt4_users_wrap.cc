@@ -6,10 +6,13 @@
 #include "../mt4_client.h"
 #include "../utils/napi_utils.h"
 
+// Persistent reference to the JS constructor function for MT4Users.
+// Stored so we can create new instances from C++ (see NewInstance).
 Napi::FunctionReference MT4UsersWrap::constructor;
 
 Napi::Function MT4UsersWrap::Init(Napi::Env env)
 {
+    // Define the JS class "MT4Users" and bind its methods to C++ implementations.
     Napi::Function klass = DefineClass(
         env,
         "MT4Users",
@@ -20,8 +23,9 @@ Napi::Function MT4UsersWrap::Init(Napi::Env env)
             InstanceMethod("_setUpdateHandler", &MT4UsersWrap::SetUpdateHandler),
         });
 
+    // Store constructor in a persistent reference so it can be reused
+    // later to instantiate objects from native code.
     constructor = Napi::Persistent(klass);
-    constructor.SuppressDestruct();
 
     return klass;
 }
@@ -30,13 +34,25 @@ Napi::Object MT4UsersWrap::NewInstance(
     Napi::Env env,
     const std::shared_ptr<MT4Client> &client)
 {
+    // Handle scope that allows returning a safely escaped JS object.
     Napi::EscapableHandleScope scope(env);
 
+    // Create a new JS instance: equivalent to `new MT4Users()`.
     Napi::Object obj = constructor.New({});
-    MT4UsersWrap *wrap = Napi::ObjectWrap<MT4UsersWrap>::Unwrap(obj);
-    wrap->users_ = MT4Users::CreateShared(client);
-    wrap->update_bridge_ = std::make_shared<JsCallbackBridge<UserPayload>>("MT4UsersUpdateHandler");
 
+    // Unwrap the C++ instance associated with the JS object.
+    MT4UsersWrap *wrap = Napi::ObjectWrap<MT4UsersWrap>::Unwrap(obj);
+
+    // Initialize the underlying native users service.
+    // Uses shared_ptr so it shares ownership of the MT4Client.
+    wrap->users_ = MT4Users::CreateShared(client);
+
+    // Create bridge responsible for forwarding native events (updates)
+    // to a JS callback in a thread-safe way.
+    wrap->update_bridge_ =
+        std::make_shared<JsCallbackBridge<UserPayload>>("MT4UsersUpdateHandler");
+
+    // Return the JS object, escaping it from the local handle scope.
     return scope.Escape(napi_value(obj)).ToObject();
 }
 

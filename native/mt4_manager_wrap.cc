@@ -14,10 +14,13 @@
 
 Napi::FunctionReference MT4ManagerWrap::constructor;
 
+// Register MT4Manager class and export it to JS.
 Napi::Object MT4ManagerWrap::Init(Napi::Env env, Napi::Object exports)
 {
+  // Ensure dependent modules are initialized first.
   MT4UsersWrap::Init(env);
 
+  // Define JS class and bind native methods.
   Napi::Function klass = DefineClass(
       env,
       "MT4Manager",
@@ -30,9 +33,10 @@ Napi::Object MT4ManagerWrap::Init(Napi::Env env, Napi::Object exports)
           InstanceMethod("stopPumping", &MT4ManagerWrap::StopPumping),
       });
 
+  // Keep constructor alive for future instantiation.
   constructor = Napi::Persistent(klass);
-  constructor.SuppressDestruct();
 
+  // Export to JS module.
   exports.Set("MT4Manager", klass);
   return exports;
 }
@@ -44,11 +48,25 @@ MT4ManagerWrap::MT4ManagerWrap(const Napi::CallbackInfo &info)
 
   try
   {
+    // Extract the DLL path from JS constructor arguments.
+    // Expected usage from JS: new MT4Manager(dllPath)
     const std::string dllPath = napi_utils::GetString(info, 0, "dllPath");
+
+    // Create the core MT4 client.
+    // Stored as shared_ptr so it can be safely shared across submodules (e.g. users).
     client_ = std::make_shared<MT4Client>(dllPath);
+
+    // Create the "users" wrapper object and inject the same client instance.
+    // This ensures all modules operate on the same underlying MT4 connection.
     Napi::Object users = MT4UsersWrap::NewInstance(env, client_);
+
+    // Hold a persistent reference to prevent the JS "users" object from being
+    // garbage collected while this manager is still alive.
     users_ = Napi::Persistent(users);
-    users_.SuppressDestruct();
+
+    // Attach "users" to the JS object so it is accessible as:
+    // const manager = new MT4Manager(...);
+    // manager.users
     Value().Set("users", users);
   }
   catch (const std::exception &ex)
