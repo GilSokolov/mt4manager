@@ -24,25 +24,27 @@ This starter is intentionally minimal. It gives you:
 ## Planned JS API
 
 ```ts
-import MT4Manager from "mt4manager";
-import path from "path";
+import { createMT4Manager } from "mt4manager";
 
-const dllPath = path.resolve(__dirname, "../dll/mtmanapi64.dll");
-const manager = new MT4Manager(dllPath);
+const manager = await createMT4Manager({
+  dllPath: ".../mtmanapi64.dll",
+  server: "your.server:443",
+  login: 123456,
+  password: "password",
+  pump: true,
+});
 
-async function main() {
-  await manager.connect("your.broker.server:443");
-  await manager.login(123456, "YourManagerPassword");
+// listen to updates
+manager.users.on("update", (user) => {
+  console.log("User updated:", user);
+});
 
-  // Planned service methods
-  // const user = await manager.users.get(123456);
-  // const trade = await manager.trades.get(123456);
+// perform action
+await manager.users.update(123456, {
+  name: "New Name",
+});
 
-  await manager.disconnect();
-  await manager.close();
-}
-
-main().catch(console.error);
+await manager.close();
 ```
 
 ## Repository layout
