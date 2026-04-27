@@ -289,9 +289,9 @@ void MT4Client::StartPumping(const PumpingOptions &options)
 
   pump_flags_ = flags;
 
-  pumping_ = true;
-
   WaitForPumpStart();
+
+  pumping_ = true;
 
   MT4_INFO_LOG("StartPumping ready");
 
@@ -417,7 +417,7 @@ void MT4Client::WaitForPumpStart()
 
   if (!ready)
   {
-    throw std::runtime_error("Timed out waiting for PUMP_START_PUMPING");
+    throw std::runtime_error("Timed out waiting for MT4 pumping to start");
   }
 }
 
