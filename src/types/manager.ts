@@ -32,3 +32,11 @@ export interface NativeMT4Manager {
 
   users: NativeUsersApi;
 }
+
+export type MT4ManagerFactoryConfig = {
+  dllPath: string;
+  server: string;
+  login: number;
+  password: string;
+  pump?: PumpingOptions | true;
+};
