@@ -29,6 +29,7 @@ public:
   bool IsPumping() const;
   int AddPumpListener(PumpListener listener);
   void RemovePumpListener(int id);
+  void EnsureNotPumping() const;
 
   CManagerInterface *Manager() const { return manager_; }
 
@@ -41,6 +42,8 @@ private: // helpers
   void EnsureOpen() const;
   void EnsureManager() const;
   void ValidateDllPath() const;
+  void WaitForPumpStart();
+  void MarkPumpStarted();
 
 private: // pumping
   void TogglePumping(int flags);
@@ -66,4 +69,8 @@ private: // state
   bool connected_{false};
   bool loggedIn_{false};
   bool winsockStarted_{false};
+
+  std::mutex pump_ready_mutex_;
+  std::condition_variable pump_ready_cv_;
+  bool pump_started_ = false;
 };

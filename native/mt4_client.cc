@@ -276,9 +276,14 @@ void MT4Client::StartPumping(const PumpingOptions &options)
     return;
   }
 
+  {
+    std::lock_guard<std::mutex> lock(pump_ready_mutex_);
+    pump_started_ = false;
+  }
+
   const int flags = BuildPumpFlags(options);
 
-  std::cerr << "[mt4] StartPumping begin flags=" << flags << std::endl;
+  MT4_INFO_LOG("StartPumping begin flags=" << flags);
 
   TogglePumping(flags);
 
@@ -286,7 +291,9 @@ void MT4Client::StartPumping(const PumpingOptions &options)
 
   pumping_ = true;
 
-  std::cerr << "[mt4] StartPumping success" << std::endl;
+  WaitForPumpStart();
+
+  MT4_INFO_LOG("StartPumping ready");
 
   // manager_->SymbolAdd("USDMXN.");
 }
@@ -298,19 +305,23 @@ void MT4Client::StopPumping()
     return;
   }
 
-  std::cerr << "[mt4] StopPumping begin" << std::endl;
+  MT4_INFO_LOG("StopPumping request");
 
   TogglePumping(pump_flags_);
 
   pumping_ = false;
 
-  std::cerr << "[mt4] StopPumping success" << std::endl;
+  {
+    std::lock_guard<std::mutex> lock(pump_ready_mutex_);
+    pump_started_ = false;
+  }
+
+  MT4_INFO_LOG("StopPumping done");
 }
 
 void MT4Client::TogglePumping(int flags)
 {
   const int code = manager_->PumpingSwitchEx(&PumpCallback, flags, this);
-  std::cerr << "[mt4] PumpingSwitchEx returned code=" << code << std::endl;
   ThrowMt4Error("PumpingSwitchEx", code, manager_);
 }
 
@@ -331,6 +342,20 @@ void __stdcall MT4Client::PumpCallback(int code, int type, void *data, void *par
 
 void MT4Client::NotifyPumpListeners(int code, int type, void *data)
 {
+  if (code == PUMP_START_PUMPING)
+  {
+    MT4_INFO_LOG("Pump event: PUMP_START_PUMPING");
+    MarkPumpStarted();
+  }
+
+  if (code == PUMP_STOP_PUMPING)
+  {
+    MT4_INFO_LOG("Pump event: PUMP_STOP_PUMPING");
+    pumping_ = false;
+
+    std::lock_guard<std::mutex> lock(pump_ready_mutex_);
+    pump_started_ = false;
+  }
 
   auto listeners = CopyPumpListeners();
   for (const auto &listener : listeners)
@@ -366,6 +391,43 @@ std::vector<MT4Client::PumpListener> MT4Client::CopyPumpListeners() const
 {
   std::lock_guard<std::mutex> lock(pump_listeners_mutex_);
   return pump_listeners_;
+}
+
+void MT4Client::MarkPumpStarted()
+{
+  {
+    std::lock_guard<std::mutex> lock(pump_ready_mutex_);
+    pump_started_ = true;
+  }
+
+  pump_ready_cv_.notify_all();
+}
+
+void MT4Client::WaitForPumpStart()
+{
+  std::unique_lock<std::mutex> lock(pump_ready_mutex_);
+
+  bool ready = pump_ready_cv_.wait_for(
+      lock,
+      std::chrono::seconds(10),
+      [this]
+      {
+        return pump_started_;
+      });
+
+  if (!ready)
+  {
+    throw std::runtime_error("Timed out waiting for PUMP_START_PUMPING");
+  }
+}
+
+void MT4Client::EnsureNotPumping() const
+{
+  if (pumping_)
+  {
+    throw std::runtime_error(
+        "This MT4Manager instance is in pumping mode. Use a separate MT4Manager instance for commands.");
+  }
 }
 
 // void MT4Client::LogTicks()

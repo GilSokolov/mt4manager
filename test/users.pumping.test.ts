@@ -5,7 +5,11 @@ import MT4Manager from "../src";
 import { config } from "./config";
 
 test("users emits pumped updates to js", async () => {
-  const manager = new MT4Manager(config.dllPath);
+  const pump = new MT4Manager({ dllPath: config.dllPath });
+  const manager = new MT4Manager({ dllPath: config.dllPath });
+
+  await pump.connect(config.server);
+  await pump.login(config.login, config.password);
 
   await manager.connect(config.server);
   await manager.login(config.login, config.password);
@@ -17,14 +21,18 @@ test("users emits pumped updates to js", async () => {
       reject(new Error("Timed out waiting for pumped user update"));
     }, 30000);
 
-    manager.users.once("update", (user) => {
+    pump.users.once("update", (user) => {
       clearTimeout(timeout);
       received = user;
       resolve();
     });
   });
 
-  await manager.startPumping();
+  await pump.startPumping();
+
+  await manager.users.update(config.userLogin, {
+    name: Math.random().toFixed(5),
+  });
 
   await done;
 
@@ -32,4 +40,5 @@ test("users emits pumped updates to js", async () => {
   assert.equal(typeof received.login, "number");
 
   await manager.close();
+  await pump.close();
 });

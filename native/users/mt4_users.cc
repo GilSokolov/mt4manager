@@ -112,6 +112,8 @@ UserRecord MT4Users::Get(int login) const
         throw std::runtime_error("MT4 manager is not initialized");
     }
 
+    client_->EnsureNotPumping();
+
     const int logins[] = {login};
     int total = 1;
 
@@ -169,6 +171,8 @@ int MT4Users::Create(UserRecord &user) const
         throw std::runtime_error("MT4 manager is not initialized");
     }
 
+    client_->EnsureNotPumping();
+
     int result = manager->UserRecordNew(&user);
 
     MT4_DEBUG_LOG("UserRecordNew returned code=" << result << " login=" << user.login);
@@ -196,6 +200,8 @@ void MT4Users::Update(const UserRecord &user) const
         MT4_ERROR_LOG("Users.Update failed: manager is not initialized");
         throw std::runtime_error("MT4 manager is not initialized");
     }
+
+    client_->EnsureNotPumping();
 
     int result = manager->UserRecordUpdate(&user);
 
