@@ -1,30 +1,28 @@
 #pragma once
 
 #include <iostream>
+#include "mt4_logger.h"
 
-// Enable debug logs by defining MT4_DEBUG (e.g. in build flags)
-
-#ifdef MT4_DEBUG
-#define MT4_DEBUG_LOG(msg)                                \
-    do                                                    \
-    {                                                     \
-        std::cerr << "[mt4][debug] " << msg << std::endl; \
-    } while (0)
-#else
-#define MT4_DEBUG_LOG(msg) \
-    do                     \
-    {                      \
-    } while (0)
-#endif
-
-#define MT4_ERROR_LOG(msg)                                \
-    do                                                    \
-    {                                                     \
-        std::cerr << "[mt4][error] " << msg << std::endl; \
+#define MT4_ERROR_LOG(msg)                      \
+    do                                          \
+    {                                           \
+        std::ostringstream oss;                 \
+        oss << msg;                             \
+        MT4Logger::Instance().Error(oss.str()); \
     } while (0)
 
-#define MT4_INFO_LOG(msg)                          \
-    do                                             \
-    {                                              \
-        std::cerr << "[mt4] " << msg << std::endl; \
+#define MT4_INFO_LOG(msg)                      \
+    do                                         \
+    {                                          \
+        std::ostringstream oss;                \
+        oss << msg;                            \
+        MT4Logger::Instance().Info(oss.str()); \
+    } while (0)
+
+#define MT4_DEBUG_LOG(msg)                      \
+    do                                          \
+    {                                           \
+        std::ostringstream oss;                 \
+        oss << msg;                             \
+        MT4Logger::Instance().Debug(oss.str()); \
     } while (0)

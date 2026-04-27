@@ -4,6 +4,7 @@
 
 #include "utils/mt4_errors.h"
 #include "utils/mt4_log.h"
+#include "utils/mt4_logger.h"
 
 int BuildPumpFlags(const PumpingOptions &options)
 {
@@ -31,6 +32,7 @@ MT4Client::MT4Client(MT4ClientConfig config)
 {
   ValidateDllPath();
   LoadApi();
+  MT4Logger::Instance().SetLevel(config_.logLevel);
 }
 
 MT4Client::~MT4Client()

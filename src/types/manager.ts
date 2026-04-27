@@ -11,9 +11,15 @@ export type PumpingOptions = {
   fullNews: boolean;
 };
 
+export enum MT4LogLevel {
+  Error = 1,
+  Info = 2,
+  Debug = 3,
+}
+
 export type ManagerConfig = {
   dllPath: string;
-  debug?: boolean;
+  logLevel?: MT4LogLevel;
 };
 
 export interface NativeMT4Manager {

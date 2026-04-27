@@ -7,16 +7,20 @@
 #include "../include/mt4_sdk.h"
 #include "../mt4_client.h"
 #include "../utils/mt4_errors.h"
+#include "../utils/mt4_log.h"
 
 MT4Users::MT4Users(const std::shared_ptr<MT4Client> &client)
     : client_(client)
 {
+    MT4_DEBUG_LOG("MT4Users created");
 }
 
 MT4Users::~MT4Users()
 {
+    MT4_DEBUG_LOG("MT4Users destroyed");
     if (client_ && pump_listener_id_ >= 0)
     {
+        MT4_DEBUG_LOG("Removing users pump listener id=" << pump_listener_id_);
         client_->RemovePumpListener(pump_listener_id_);
         pump_listener_id_ = -1;
     }
@@ -31,6 +35,7 @@ std::shared_ptr<MT4Users> MT4Users::CreateShared(const std::shared_ptr<MT4Client
 
 void MT4Users::AttachPumpListener()
 {
+    MT4_DEBUG_LOG("Attaching users pump listener");
     std::weak_ptr<MT4Users> weak_self = shared_from_this();
 
     pump_listener_id_ = client_->AddPumpListener(
@@ -41,12 +46,14 @@ void MT4Users::AttachPumpListener()
                 self->HandleEvent(code, type, data);
             }
         });
+    MT4_DEBUG_LOG("Attached users pump listener id=" << pump_listener_id_);
 }
 
 void MT4Users::DetachPumpListener()
 {
     if (pump_listener_id_ != -1)
     {
+        MT4_DEBUG_LOG("Detaching users pump listener id=" << pump_listener_id_);
         client_->RemovePumpListener(pump_listener_id_);
         pump_listener_id_ = -1;
     }
@@ -61,6 +68,11 @@ void MT4Users::HandleEvent(int code, int type, void *data)
 
     const UserRecord *user = static_cast<const UserRecord *>(data);
 
+    MT4_DEBUG_LOG(
+        "User pump update"
+        << " login=" << user->login
+        << " type=" << type);
+
     UpdateHandler handler;
     {
         std::lock_guard<std::mutex> lock(update_handler_mutex_);
@@ -69,7 +81,12 @@ void MT4Users::HandleEvent(int code, int type, void *data)
 
     if (handler)
     {
+        MT4_DEBUG_LOG("Calling users update handler login=" << user->login);
         handler(user);
+    }
+    else
+    {
+        MT4_DEBUG_LOG("No users update handler registered");
     }
 }
 
@@ -81,24 +98,32 @@ void MT4Users::SetUpdateHandler(UpdateHandler handler)
 
 UserRecord MT4Users::Get(int login) const
 {
+    MT4_INFO_LOG("Users.Get start login=" << login);
     if (!client_)
     {
+        MT4_ERROR_LOG("Users.Get failed: client is not initialized");
         throw std::runtime_error("MT4 client is not initialized");
     }
 
     CManagerInterface *manager = client_->Manager();
     if (!manager)
     {
+        MT4_ERROR_LOG("Users.Get failed: manager is not initialized");
         throw std::runtime_error("MT4 manager is not initialized");
     }
 
     const int logins[] = {login};
     int total = 1;
 
+    MT4_DEBUG_LOG("Calling UserRecordsRequest login=" << login);
+
     UserRecord *records = manager->UserRecordsRequest(logins, &total);
+
+    MT4_DEBUG_LOG("UserRecordsRequest returned total=" << total << " records=" << records);
 
     if (!records || total <= 0)
     {
+        MT4_ERROR_LOG("Users.Get failed: no users returned login=" << login);
         throw std::runtime_error("UserRecordsRequest returned no users");
     }
 
@@ -114,44 +139,69 @@ UserRecord MT4Users::Get(int login) const
 
     if (!found)
     {
+        MT4_ERROR_LOG("Users.Get failed: requested user not found login=" << login);
         manager->MemFree(records);
         throw std::runtime_error("Requested user not found in UserRecordsRequest result");
     }
 
     UserRecord user = *found;
     manager->MemFree(records);
+
+    MT4_INFO_LOG("Users.Get success login=" << login);
+
     return user;
 }
 
 int MT4Users::Create(UserRecord &user) const
 {
+    MT4_INFO_LOG("Users.Create start group=" << user.group << " email=" << user.email);
+
     if (!client_)
     {
+        MT4_ERROR_LOG("Users.Create failed: client is not initialized");
         throw std::runtime_error("MT4 client is not initialized");
     }
 
     CManagerInterface *manager = client_->Manager();
     if (!manager)
     {
+        MT4_ERROR_LOG("Users.Create failed: manager is not initialized");
         throw std::runtime_error("MT4 manager is not initialized");
     }
 
-    ThrowMt4Error("UserRecordNew", manager->UserRecordNew(&user), manager);
+    int result = manager->UserRecordNew(&user);
+
+    MT4_DEBUG_LOG("UserRecordNew returned code=" << result << " login=" << user.login);
+
+    ThrowMt4Error("UserRecordNew", result, manager);
+
+    MT4_INFO_LOG("Users.Create success login=" << user.login);
+
     return user.login;
 }
 
 void MT4Users::Update(const UserRecord &user) const
 {
+    MT4_INFO_LOG("Users.Update start login=" << user.login);
+
     if (!client_)
     {
+        MT4_ERROR_LOG("Users.Update failed: client is not initialized");
         throw std::runtime_error("MT4 client is not initialized");
     }
 
     CManagerInterface *manager = client_->Manager();
     if (!manager)
     {
+        MT4_ERROR_LOG("Users.Update failed: manager is not initialized");
         throw std::runtime_error("MT4 manager is not initialized");
     }
 
-    ThrowMt4Error("UserRecordUpdate", manager->UserRecordUpdate(&user), manager);
+    int result = manager->UserRecordUpdate(&user);
+
+    MT4_DEBUG_LOG("UserRecordUpdate returned code=" << result << " login=" << user.login);
+
+    ThrowMt4Error("UserRecordUpdate", result, manager);
+
+    MT4_INFO_LOG("Users.Update success login=" << user.login);
 }

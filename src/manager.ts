@@ -24,10 +24,7 @@ export default class MT4Manager {
   constructor(dllPath: string);
 
   constructor(options: string | ManagerConfig) {
-    const config =
-      typeof options === "string"
-        ? { dllPath: options, debug: false }
-        : options;
+    const config = typeof options === "string" ? { dllPath: options } : options;
 
     this.native = new nativeBinding.MT4Manager(config);
     this.users = new UsersService(this.native.users);

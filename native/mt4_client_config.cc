@@ -9,7 +9,15 @@ MT4ClientConfig FromNapiClientConfig(Napi::Env env, const Napi::Object &obj)
     MT4ClientConfig config{};
 
     config.dllPath = GetString(obj, "dllPath");
-    config.debug = GetOptionalBool(obj, "debug");
+
+    int level = GetOptionalInt(obj, "logLevel", 1);
+
+    if (level < 1 || level > 3)
+    {
+        throw std::runtime_error("Expected logLevel to be 1, 2, or 3");
+    }
+
+    config.logLevel = static_cast<MT4LogLevel>(level);
 
     return config;
 }
