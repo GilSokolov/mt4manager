@@ -1,3 +1,4 @@
+import { NativeSymbolsApi } from "./symbol";
 import { NativeUsersApi } from "./user";
 
 export type Listener<T> = (user: T) => void;
@@ -31,6 +32,7 @@ export interface NativeMT4Manager {
   stopPumping(): Promise<void>;
 
   users: NativeUsersApi;
+  symbols: NativeSymbolsApi;
 }
 
 export type MT4ManagerFactoryConfig = {
@@ -38,5 +40,6 @@ export type MT4ManagerFactoryConfig = {
   server: string;
   login: number;
   password: string;
-  pump?: PumpingOptions | true;
+  pump?: Partial<PumpingOptions> | true;
+  logLevel?: MT4LogLevel;
 };

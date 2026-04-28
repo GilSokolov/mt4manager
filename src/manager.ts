@@ -1,4 +1,5 @@
 import { PumpingService } from "./services/pumping";
+import { SymbolService } from "./services/symbols";
 import { TradesService } from "./services/trades";
 import { UsersService } from "./services/users";
 import {
@@ -15,6 +16,7 @@ export default class MT4Manager {
   private readonly native: NativeMT4Manager;
   public readonly users: UsersService;
   public readonly trades: TradesService;
+  public readonly symbols: SymbolService;
   private pumpInstance?: PumpingService;
 
   #pumping = false;
@@ -29,6 +31,7 @@ export default class MT4Manager {
     this.native = new nativeBinding.MT4Manager(config);
     this.users = new UsersService(this.native.users);
     this.trades = new TradesService(this.native);
+    this.symbols = new SymbolService(this.native.symbols);
   }
 
   async connect(server: string): Promise<void> {

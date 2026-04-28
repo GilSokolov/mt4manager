@@ -13,7 +13,10 @@
         "native/users/mt4_users_wrap.cc",
         "native/users/mt4_user_to_napi.cc",
         "native/users/mt4_user_from_napi.cc",
-        "native/pumping_options_napi.cc"
+        "native/pumping_options_napi.cc",
+        "native/symbols/mt4_symbols.cc",
+"native/symbols/mt4_symbols_wrap.cc",
+"native/symbols/mt4_symbol_to_napi.cc"
       ],
        "libraries": [
         "ws2_32.lib"

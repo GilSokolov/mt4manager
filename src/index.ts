@@ -2,7 +2,7 @@ import { MT4Manager } from "./manager";
 import type { MT4ManagerFactoryConfig } from "./types";
 
 export async function createMT4Manager(config: MT4ManagerFactoryConfig) {
-  const manager = new MT4Manager(config.dllPath);
+  const manager = new MT4Manager(config);
 
   try {
     await manager.connect(config.server);
