@@ -3,24 +3,29 @@
 
 #include "../utils/napi_converter_utils.h"
 
-Napi::Object ToNapiSymbol(Napi::Env env, const SymbolInfo &symbol)
+Napi::Object ToNapiSymbol(Napi::Env env, const SymbolInfo &symbol, bool full = false)
 {
     Napi::Object obj = Napi::Object::New(env);
 
     obj.Set("symbol", SafeString(symbol.symbol, sizeof(symbol.symbol)));
-    obj.Set("digits", Napi::Number::New(env, symbol.digits));
-    obj.Set("visible", Napi::Boolean::New(env, symbol.visible != 0));
-    obj.Set("type", Napi::Number::New(env, symbol.type));
-    obj.Set("point", Napi::Number::New(env, symbol.point));
-    obj.Set("spread", Napi::Number::New(env, symbol.spread));
     obj.Set("direction", Napi::Number::New(env, symbol.direction));
-    obj.Set("lastTime", ToJsDateOrNull(env, symbol.lasttime));
     obj.Set("bid", Napi::Number::New(env, symbol.bid));
     obj.Set("ask", Napi::Number::New(env, symbol.ask));
     obj.Set("high", Napi::Number::New(env, symbol.high));
     obj.Set("low", Napi::Number::New(env, symbol.low));
-    obj.Set("commission", Napi::Number::New(env, symbol.commission));
-    obj.Set("commissionType", Napi::Number::New(env, symbol.comm_type));
+    obj.Set("lastTime", ToJsDateOrNull(env, symbol.lasttime));
+
+    if (full)
+    {
+        obj.Set("digits", Napi::Number::New(env, symbol.digits));
+        obj.Set("visible", Napi::Boolean::New(env, symbol.visible != 0));
+        obj.Set("type", Napi::Number::New(env, symbol.type));
+        obj.Set("point", Napi::Number::New(env, symbol.point));
+        obj.Set("spread", Napi::Number::New(env, symbol.spread));
+
+        obj.Set("commission", Napi::Number::New(env, symbol.commission));
+        obj.Set("commissionType", Napi::Number::New(env, symbol.comm_type));
+    }
 
     return obj;
 }

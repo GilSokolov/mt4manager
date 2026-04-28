@@ -1,9 +1,10 @@
-// native/symbols/mt4_symbols_wrap.cc
-#include "./mt4_symbols_wrap.h"
+#include <iostream>
+
+#include "mt4_symbols.h"
+#include "mt4_symbols_wrap.h"
 
 #include "../mt4_client.h"
 #include "../utils/napi_utils.h"
-#include "./mt4_symbol_to_napi.h"
 
 Napi::FunctionReference MT4SymbolsWrap::constructor;
 
@@ -15,6 +16,9 @@ Napi::Function MT4SymbolsWrap::Init(Napi::Env env)
         {
             InstanceMethod("get", &MT4SymbolsWrap::Get),
             InstanceMethod("getAll", &MT4SymbolsWrap::GetAll),
+            InstanceMethod("_setTickHandler", &MT4SymbolsWrap::SetTickHandler),
+            InstanceMethod("subscribe", &MT4SymbolsWrap::Subscribe),
+            InstanceMethod("unsubscribe", &MT4SymbolsWrap::Unsubscribe),
         });
 
     constructor = Napi::Persistent(klass);
@@ -38,6 +42,8 @@ Napi::Object MT4SymbolsWrap::NewInstance(
     MT4SymbolsWrap *wrap = Napi::ObjectWrap<MT4SymbolsWrap>::Unwrap(obj);
 
     wrap->symbols_ = MT4Symbols::CreateShared(client);
+    wrap->bridge_ =
+        std::make_shared<JsCallbackBridge<SymbolPayload>>("MT4SymbolsTickHandler");
 
     return scope.Escape(obj).ToObject();
 }
@@ -52,7 +58,7 @@ Napi::Value MT4SymbolsWrap::Get(const Napi::CallbackInfo &info)
 
         const SymbolInfo result = symbols_->Get(symbol);
 
-        return ToNapiSymbol(env, result);
+        return ToNapiSymbol(env, result, true);
     }
     catch (const std::exception &ex)
     {
@@ -76,6 +82,62 @@ Napi::Value MT4SymbolsWrap::GetAll(const Napi::CallbackInfo &info)
         }
 
         return arr;
+    }
+    catch (const std::exception &ex)
+    {
+        return napi_utils::ThrowError(env, ex);
+    }
+}
+
+Napi::Value MT4SymbolsWrap::SetTickHandler(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    try
+    {
+        Napi::Function handler = napi_utils::GetFunction(info, 0, "handler");
+
+        bridge_->SetHandler(env, handler);
+
+        symbols_->SetTickHandler(
+            [bridge = bridge_](const SymbolInfo *symbol)
+            {
+                bridge->CallJs(SymbolPayload{*symbol}, BuildSymbolArgs);
+            });
+
+        return env.Undefined();
+    }
+    catch (const std::exception &ex)
+    {
+        return napi_utils::ThrowError(env, ex);
+    }
+}
+
+Napi::Value MT4SymbolsWrap::Subscribe(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    try
+    {
+        const std::string symbol = napi_utils::GetString(info, 0, "symbol");
+        symbols_->Subscribe(symbol);
+        return env.Undefined();
+    }
+    catch (const std::exception &ex)
+    {
+        return napi_utils::ThrowError(env, ex);
+    }
+}
+
+Napi::Value MT4SymbolsWrap::Unsubscribe(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    try
+    {
+        const std::string symbol = napi_utils::GetString(info, 0, "symbol");
+        symbols_->Unsubscribe(symbol);
+        return env.Undefined();
     }
     catch (const std::exception &ex)
     {

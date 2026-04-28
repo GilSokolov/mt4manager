@@ -5,5 +5,5 @@
 
 #include "../include/mt4_sdk.h"
 
-Napi::Object ToNapiSymbol(Napi::Env env, const SymbolInfo &symbol);
+Napi::Object ToNapiSymbol(Napi::Env env, const SymbolInfo &symbol, bool full);
 Napi::Object ToNapiSymbolConfig(Napi::Env env, const ConSymbol &s);

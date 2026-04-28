@@ -1,16 +1,16 @@
 import { EventEmitter } from "node:events";
 import { Listener } from "../types/manager";
-import { MT4Symbol, MT4SymbolConfig, NativeSymbolsApi } from "../types/symbol";
+import { MT4SymbolConfig, NativeSymbolsApi, Tick } from "../types/symbol";
 
-type SymbolListener = Listener<MT4Symbol>;
+type SymbolListener = Listener<Tick>;
 
 export class SymbolService extends EventEmitter {
   constructor(private readonly native: NativeSymbolsApi) {
     super();
-    // this.native._setUpdateHandler((user) => {
-    //   this.emit("update", user);
-    //   this.dispatchWatch(user);
-    // });
+    this.native._setTickHandler((symbol) => {
+      this.emit("tick", symbol);
+      this.dispatchWatch(symbol);
+    });
   }
 
   private watches = new Map<string, Set<SymbolListener>>();
@@ -21,6 +21,26 @@ export class SymbolService extends EventEmitter {
 
   getAll(): Promise<MT4SymbolConfig[]> {
     return Promise.resolve(this.native.getAll());
+  }
+
+  subscribe(symbol: string): Promise<void> {
+    this.assertSymbol(symbol);
+    return Promise.resolve(this.native.subscribe(symbol));
+  }
+
+  unsubscribe(symbol: string): Promise<void> {
+    this.assertSymbol(symbol);
+    return Promise.resolve(this.native.unsubscribe(symbol));
+  }
+
+  private assertSymbol(symbol: string) {
+    if (typeof symbol !== "string") {
+      throw new TypeError("Expected string: symbol");
+    }
+
+    if (!symbol.trim()) {
+      throw new TypeError("Expected non-empty string: symbol");
+    }
   }
 
   watch(target: string, listener: SymbolListener) {
@@ -55,33 +75,12 @@ export class SymbolService extends EventEmitter {
     this.watches.clear();
   }
 
-  private dispatchWatch(symbol: MT4Symbol) {
+  private dispatchWatch(symbol: Tick) {
     const listeners = this.watches.get(symbol.symbol);
     if (!listeners) return;
 
     for (const listener of listeners) {
       listener(symbol);
     }
-  }
-
-  private assertLogin(login: number): void {
-    if (!Number.isInteger(login) || login <= 0) {
-      throw new TypeError("login must be a positive integer");
-    }
-  }
-
-  private assertRequiredString(value: string, field: string): void {
-    if (typeof value !== "string" || value.trim() === "") {
-      throw new TypeError(`${field} must be a non-empty string`);
-    }
-  }
-
-  private normalizeString(value?: string): string | undefined {
-    if (value === undefined) {
-      return undefined;
-    }
-
-    const trimmed = value.trim();
-    return trimmed === "" ? undefined : trimmed;
   }
 }

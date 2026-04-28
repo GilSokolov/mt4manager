@@ -34,6 +34,7 @@ private:
 
 private:
     std::shared_ptr<MT4Client> client_;
+
     UpdateHandler update_handler_;
     mutable std::mutex update_handler_mutex_;
     int pump_listener_id_ = -1;

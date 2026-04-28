@@ -294,8 +294,6 @@ void MT4Client::StartPumping(const PumpingOptions &options)
   pumping_ = true;
 
   MT4_INFO_LOG("StartPumping ready");
-
-  // manager_->SymbolAdd("USDMXN.");
 }
 
 void MT4Client::StopPumping()
@@ -429,35 +427,3 @@ void MT4Client::EnsureNotPumping() const
         "This MT4Manager instance is in pumping mode. Use a separate MT4Manager instance for commands.");
   }
 }
-
-// void MT4Client::LogTicks()
-// {
-//   // if (!manager_)
-//   // {
-//   //   return;
-//   // }
-
-//   // SymbolInfo symbols[32];
-//   // int count = 32;
-
-//   // while (count > 0)
-//   // {
-//   //   count = 32;
-//   //   count = manager_->SymbolInfoUpdated(symbols, count);
-
-//   //   if (count > 0)
-//   //   {
-//   //     std::cerr << "[mt4] PUMP_UPDATE_BIDASK: " << count << " updated symbols" << std::endl;
-
-//   //     for (int i = 0; i < count; ++i)
-//   //     {
-
-//   //       std::cerr << "[tick] "
-//   //                 << symbols[i].symbol
-//   //                 << " bid=" << symbols[i].bid
-//   //                 << " ask=" << symbols[i].ask
-//   //                 << std::endl;
-//   //     }
-//   //   }
-//   // }
-// }
