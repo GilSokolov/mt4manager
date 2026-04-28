@@ -80,6 +80,10 @@ Napi::Value MT4UsersWrap::Get(const Napi::CallbackInfo &info)
         const UserRecord user = users_->Get(login);
         return ToNapiUser(env, user);
     }
+    catch (const MT4Error &ex)
+    {
+        return napi_utils::ThrowError(env, ex);
+    }
     catch (const std::exception &ex)
     {
         return napi_utils::ThrowError(env, ex);

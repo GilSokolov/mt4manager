@@ -8,6 +8,7 @@
 #include "../mt4_client.h"
 #include "../utils/mt4_errors.h"
 #include "../utils/mt4_log.h"
+#include "../utils/mt4_error_helpers.h"
 
 MT4Users::MT4Users(const std::shared_ptr<MT4Client> &client)
     : client_(client)
@@ -98,19 +99,14 @@ void MT4Users::SetUpdateHandler(UpdateHandler handler)
 
 UserRecord MT4Users::Get(int login) const
 {
-    MT4_INFO_LOG("Users.Get start login=" << login);
-    if (!client_)
-    {
-        MT4_ERROR_LOG("Users.Get failed: client is not initialized");
-        throw std::runtime_error("MT4 client is not initialized");
-    }
+    const char *context = "Users.Get";
+
+    MT4_INFO_LOG(context << " start login=" << login);
+
+    MT4_ENSURE_CLIENT(context, client_);
 
     CManagerInterface *manager = client_->Manager();
-    if (!manager)
-    {
-        MT4_ERROR_LOG("Users.Get failed: manager is not initialized");
-        throw std::runtime_error("MT4 manager is not initialized");
-    }
+    MT4_ENSURE_MANAGER(context, manager);
 
     client_->EnsureNotPumping();
 
@@ -125,8 +121,7 @@ UserRecord MT4Users::Get(int login) const
 
     if (!records || total <= 0)
     {
-        MT4_ERROR_LOG("Users.Get failed: no users returned login=" << login);
-        throw std::runtime_error("UserRecordsRequest returned no users");
+        MT4_THROW_NOT_FOUND_WITH_ID(context, "User", login);
     }
 
     const UserRecord *found = nullptr;
@@ -141,15 +136,15 @@ UserRecord MT4Users::Get(int login) const
 
     if (!found)
     {
-        MT4_ERROR_LOG("Users.Get failed: requested user not found login=" << login);
         manager->MemFree(records);
-        throw std::runtime_error("Requested user not found in UserRecordsRequest result");
+
+        MT4_THROW_NOT_FOUND_WITH_ID(context, "User", login);
     }
 
     UserRecord user = *found;
     manager->MemFree(records);
 
-    MT4_INFO_LOG("Users.Get success login=" << login);
+    MT4_INFO_LOG(context << " success login=" << login);
 
     return user;
 }

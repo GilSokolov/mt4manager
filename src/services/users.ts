@@ -20,9 +20,16 @@ export class UsersService extends EventEmitter {
 
   private watches = new Map<number, Set<UserListener>>();
 
-  get(login: number) {
-    this.assertLogin(login);
-    return this.native.get(login);
+  async get(login: number): Promise<User | null> {
+    try {
+      return await this.native.get(login);
+    } catch (err: any) {
+      if (err?.code === "NOT_FOUND") {
+        return null;
+      }
+
+      throw err;
+    }
   }
 
   create(input: CreateUserInput) {

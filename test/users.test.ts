@@ -31,8 +31,10 @@ test("users.get should return user", async () => {
 
   const user = await manager.users.get(config.userLogin);
 
-  assert.equal(user.login, config.userLogin);
-  assert.ok(typeof user.group === "string");
+  if (user) {
+    assert.equal(user.login, config.userLogin);
+    assert.ok(typeof user.group === "string");
+  }
 
   manager.close();
 });

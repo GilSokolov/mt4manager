@@ -3,6 +3,8 @@
 #include <napi.h>
 #include <string>
 
+#include "./mt4_errors.h"
+
 namespace napi_utils
 {
 
@@ -53,20 +55,35 @@ namespace napi_utils
         return info[index].As<Napi::Function>();
     }
 
-    inline Napi::Value ThrowError(Napi::Env env, const std::string &msg)
+    inline Napi::Value ThrowErrorWithCode(
+        Napi::Env env,
+        const char *message,
+        const char *code)
     {
-        Napi::Error::New(env, msg).ThrowAsJavaScriptException();
-        return env.Null();
+        Napi::Error error = Napi::Error::New(env, message);
+        error.Value().Set("code", code);
+        error.ThrowAsJavaScriptException();
+        return env.Undefined();
     }
 
-    inline Napi::Value ThrowError(Napi::Env env, const char *msg)
+    inline Napi::Value ThrowError(Napi::Env env, const MT4Error &ex)
     {
-        return ThrowError(env, std::string(msg));
+        return ThrowErrorWithCode(env, ex.what(), ex.CodeString());
     }
 
     inline Napi::Value ThrowError(Napi::Env env, const std::exception &ex)
     {
-        return ThrowError(env, ex.what());
+        return ThrowErrorWithCode(env, ex.what(), "UNKNOWN");
+    }
+
+    inline Napi::Value ThrowError(Napi::Env env, const char *message)
+    {
+        return ThrowErrorWithCode(env, message, "UNKNOWN");
+    }
+
+    inline Napi::Value ThrowError(Napi::Env env, const std::string &message)
+    {
+        return ThrowError(env, message.c_str());
     }
 
 } // namespace napi_utils
