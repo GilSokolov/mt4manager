@@ -2,20 +2,44 @@
 
 #include "../utils/napi_converter_utils.h"
 
-Napi::Object ToNapiPosition(Napi::Env env, const TradeRecord &t)
+Napi::Object ToNapiPosition(Napi::Env env, const TradeRecord &trade)
 {
     Napi::Object obj = Napi::Object::New(env);
 
-    obj.Set("order", t.order);
-    obj.Set("login", t.login);
-    obj.Set("symbol", t.symbol);
-    obj.Set("volume", t.volume);
-    obj.Set("openPrice", t.open_price);
-    obj.Set("closePrice", t.close_price);
-    obj.Set("profit", t.profit);
+    obj.Set("id", trade.order);
+    obj.Set("login", trade.login);
+    obj.Set("symbol", SafeString(trade.symbol, sizeof(trade.symbol)));
+    obj.Set("digits", trade.digits);
+    obj.Set("cmd", trade.cmd);
+    obj.Set("volume", trade.volume);
 
-    obj.Set("openTime", ToJsDateOrNull(env, t.open_time));
-    obj.Set("closeTime", ToJsDateOrNull(env, t.close_time));
+    obj.Set("openTime", ToJsDateOrNull(env, trade.open_time));
+    obj.Set("openPrice", trade.open_price);
+    obj.Set("sl", trade.sl);
+    obj.Set("tp", trade.tp);
+    obj.Set("closeTime", ToJsDateOrNull(env, trade.close_time));
+    obj.Set("closePrice", trade.close_price);
+    obj.Set("expiration", ToJsDateOrNull(env, trade.expiration));
+    obj.Set("reason", static_cast<int>(trade.reason));
+
+    obj.Set("convRates", ToNapiNumberArray(env, trade.conv_rates, 2));
+
+    obj.Set("commission", trade.commission);
+    obj.Set("commissionAgent", trade.commission_agent);
+    obj.Set("swap", trade.storage);
+    obj.Set("profit", trade.profit);
+    obj.Set("taxes", trade.taxes);
+    obj.Set("magic", trade.magic);
+    obj.Set("comment", SafeString(trade.comment, sizeof(trade.comment)));
+    obj.Set("gwOrder", trade.gw_order);
+    obj.Set("gwVolume", trade.gw_volume);
+    obj.Set("gwOpenPrice", trade.gw_open_price);
+    obj.Set("gwClosePrice", trade.gw_close_price);
+    obj.Set("marginRate", trade.margin_rate);
+    obj.Set("timestamp", ToJsDateOrNull(env, trade.timestamp));
+    obj.Set("activation", trade.activation);
+    obj.Set("state", trade.state);
+    obj.Set("apiData", ToNapiNumberArray(env, trade.api_data, 4));
 
     return obj;
 }

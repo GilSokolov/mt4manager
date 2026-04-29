@@ -1,10 +1,11 @@
 #pragma once
 
-#include <napi.h>
-
+#include <string>
 #include <cstring>
 #include <stdexcept>
-#include <string>
+#include <type_traits>
+
+#include <napi.h>
 
 // ---------- LOW LEVEL ----------
 
@@ -127,6 +128,21 @@ inline Napi::Value ToJsDateOrNull(Napi::Env env, int ts)
         return env.Null();
 
     return Napi::Date::New(env, static_cast<double>(ts) * 1000.0);
+}
+
+template <typename T>
+static Napi::Array ToNapiNumberArray(Napi::Env env, const T *values, int count)
+{
+    static_assert(std::is_arithmetic<T>::value, "T must be numeric");
+
+    Napi::Array arr = Napi::Array::New(env, count);
+
+    for (int i = 0; i < count; ++i)
+    {
+        arr.Set(i, Napi::Number::New(env, static_cast<double>(values[i])));
+    }
+
+    return arr;
 }
 
 // ---------- HIGH LEVEL HELPERS ----------

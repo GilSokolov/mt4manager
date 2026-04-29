@@ -1,7 +1,9 @@
+import { TradeRecord } from "../types/trade-record";
+
 export class Positions {
   constructor(private native: any) {}
 
-  get(order: number) {
+  get(order: number): Promise<TradeRecord> {
     if (typeof order !== "number") {
       return Promise.reject("order must be number");
     }
