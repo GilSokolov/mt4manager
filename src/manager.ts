@@ -1,7 +1,6 @@
-import { PumpingService } from "./services/pumping";
-import { SymbolService } from "./services/symbols";
-import { TradesService } from "./services/trades";
-import { UsersService } from "./services/users";
+import { Positions } from "./services/positions";
+import { Symbols } from "./services/symbols";
+import { Users } from "./services/users";
 import {
   ManagerConfig,
   NativeMT4Manager,
@@ -14,10 +13,9 @@ const nativeBinding = loadBinding();
 
 export default class MT4Manager {
   private readonly native: NativeMT4Manager;
-  public readonly users: UsersService;
-  public readonly trades: TradesService;
-  public readonly symbols: SymbolService;
-  private pumpInstance?: PumpingService;
+  public readonly users: Users;
+  public readonly symbols: Symbols;
+  public readonly positions: Positions;
 
   #pumping = false;
   #pumpConfig: PumpingOptions = normalizePumpingOptions();
@@ -29,9 +27,9 @@ export default class MT4Manager {
     const config = typeof options === "string" ? { dllPath: options } : options;
 
     this.native = new nativeBinding.MT4Manager(config);
-    this.users = new UsersService(this.native.users);
-    this.trades = new TradesService(this.native);
-    this.symbols = new SymbolService(this.native.symbols);
+    this.users = new Users(this.native.users);
+    this.symbols = new Symbols(this.native.symbols);
+    this.positions = new Positions(this.native.positions);
   }
 
   async connect(server: string): Promise<void> {
@@ -47,10 +45,6 @@ export default class MT4Manager {
   }
 
   async close(): Promise<void> {
-    if (this.pumpInstance) {
-      this.pumpInstance.removeAllListeners();
-      this.pumpInstance = undefined;
-    }
     return this.native.close();
   }
 

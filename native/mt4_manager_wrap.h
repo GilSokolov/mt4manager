@@ -27,4 +27,5 @@ private:
   std::shared_ptr<MT4Client> client_;
   Napi::ObjectReference users_;
   Napi::ObjectReference symbols_;
+  Napi::ObjectReference positions_;
 };

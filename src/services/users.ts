@@ -9,7 +9,7 @@ import {
 
 type UserListener = Listener<User>;
 
-export class UsersService extends EventEmitter {
+export class Users extends EventEmitter {
   constructor(private readonly native: NativeUsersApi) {
     super();
     this.native._setUpdateHandler((user) => {

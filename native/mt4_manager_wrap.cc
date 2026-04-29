@@ -14,6 +14,7 @@
 
 #include "users/mt4_users_wrap.h"
 #include "symbols/mt4_symbols_wrap.h"
+#include "positions/mt4_positions_wrap.h"
 
 Napi::FunctionReference MT4ManagerWrap::constructor;
 
@@ -23,6 +24,7 @@ Napi::Object MT4ManagerWrap::Init(Napi::Env env, Napi::Object exports)
   // Ensure dependent modules are initialized first.
   MT4UsersWrap::Init(env);
   MT4SymbolsWrap::Init(env);
+  MT4PositionsWrap::Init(env, exports);
 
   // Define JS class and bind native methods.
   Napi::Function klass = DefineClass(
@@ -65,16 +67,20 @@ MT4ManagerWrap::MT4ManagerWrap(const Napi::CallbackInfo &info)
     // This ensures all modules operate on the same underlying MT4 connection.
     Napi::Object users = MT4UsersWrap::NewInstance(env, client_);
     Napi::Object symbols = MT4SymbolsWrap::NewInstance(env, client_);
+    Napi::Object positions = MT4PositionsWrap::NewInstance(env, client_);
+
     // Hold a persistent reference to prevent the JS "users" object from being
     // garbage collected while this manager is still alive.
     users_ = Napi::Persistent(users);
     symbols_ = Napi::Persistent(symbols);
+    positions_ = Napi::Persistent(positions);
 
     // Attach "users" to the JS object so it is accessible as:
     // const manager = new MT4Manager(...);
     // manager.users
     Value().Set("users", users);
     Value().Set("symbols", symbols);
+    Value().Set("positions", positions);
   }
   catch (const std::exception &ex)
   {

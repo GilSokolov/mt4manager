@@ -3,6 +3,9 @@
     {
       "target_name": "mt4manager",
       "sources": [
+           "native/positions/mt4_positions.cc",
+        "native/positions/mt4_position_to_napi.cc",
+        "native/positions/mt4_positions_wrap.cc",
         "native/addon.cc",
         "native/mt4_manager_wrap.cc",
         "native/mt4_client.cc",
@@ -17,7 +20,8 @@
         "native/symbols/mt4_symbols.cc",
         "native/symbols/mt4_symbols_wrap.cc",
         "native/symbols/mt4_symbol_to_napi.cc",
-        "native/symbols/mt4_symbol_convertor.cc"
+        "native/symbols/mt4_symbol_convertor.cc",
+       
       ],
        "libraries": [
         "ws2_32.lib"

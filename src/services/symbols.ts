@@ -4,7 +4,7 @@ import { MT4SymbolConfig, NativeSymbolsApi, Tick } from "../types/symbol";
 
 type SymbolListener = Listener<Tick>;
 
-export class SymbolService extends EventEmitter {
+export class Symbols extends EventEmitter {
   constructor(private readonly native: NativeSymbolsApi) {
     super();
     this.native._setTickHandler((symbol) => {
