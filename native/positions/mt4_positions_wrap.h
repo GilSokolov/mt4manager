@@ -17,8 +17,8 @@ public:
 private:
     std::shared_ptr<MT4Positions> positions_;
 
-    // JS methods
     Napi::Value Get(const Napi::CallbackInfo &info);
+    Napi::Value Create(const Napi::CallbackInfo &info);
 
     static Napi::FunctionReference constructor;
 };

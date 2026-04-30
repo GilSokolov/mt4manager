@@ -1,6 +1,10 @@
 #include "mt4_positions_wrap.h"
-#include "../utils/napi_utils.h"
 #include "mt4_position_to_napi.h"
+
+#include "../utils/napi_utils.h"
+#include "../utils/mt4_log.h"
+
+#include "../trades/trade_from_napi.h"
 
 Napi::FunctionReference MT4PositionsWrap::constructor;
 
@@ -11,6 +15,7 @@ Napi::Object MT4PositionsWrap::Init(Napi::Env env, Napi::Object exports)
         "MT4Positions",
         {
             InstanceMethod("get", &MT4PositionsWrap::Get),
+            InstanceMethod("create", &MT4PositionsWrap::Create),
         });
 
     constructor = Napi::Persistent(klass);
@@ -48,6 +53,26 @@ Napi::Value MT4PositionsWrap::Get(const Napi::CallbackInfo &info)
     {
         const int order = napi_utils::GetInt32(info, 0, "login");
         const TradeRecord position = positions_->Get(order);
+        return ToNapiPosition(env, position);
+    }
+    catch (const MT4Error &ex)
+    {
+        return napi_utils::ThrowError(env, ex);
+    }
+    catch (const std::exception &ex)
+    {
+        return napi_utils::ThrowError(env, ex);
+    }
+}
+
+Napi::Value MT4PositionsWrap::Create(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    try
+    {
+        auto payload = FromNapiTrade(info[0]);
+        const TradeRecord position = positions_->Create(payload);
         return ToNapiPosition(env, position);
     }
     catch (const MT4Error &ex)

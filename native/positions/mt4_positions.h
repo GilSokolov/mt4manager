@@ -6,6 +6,7 @@
 #include <functional>
 
 #include "../include/mt4_sdk.h"
+#include "../trades/trade_types.h"
 
 class MT4Client;
 
@@ -17,6 +18,7 @@ public:
     ~MT4Positions();
 
     TradeRecord Get(int login) const;
+    TradeRecord Create(const TradePayload &payload);
 
 private:
     explicit MT4Positions(const std::shared_ptr<MT4Client> &client);

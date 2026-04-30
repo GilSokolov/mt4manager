@@ -51,6 +51,18 @@ inline std::string GetOptionalString(const Napi::Object &obj, const char *key)
     return v.As<Napi::String>().Utf8Value();
 }
 
+inline int GetInt(const Napi::Object &obj, const char *key, int fallback = 0)
+{
+    if (!obj.Has(key))
+        throw std::runtime_error(std::string("Expected: ") + key);
+
+    Napi::Value v = obj.Get(key);
+    if (!v.IsNumber())
+        throw std::runtime_error(std::string("Expected number: ") + key);
+
+    return v.As<Napi::Number>().Int32Value();
+}
+
 inline int GetOptionalInt(const Napi::Object &obj, const char *key, int fallback = 0)
 {
     if (!obj.Has(key))
@@ -61,6 +73,30 @@ inline int GetOptionalInt(const Napi::Object &obj, const char *key, int fallback
         throw std::runtime_error(std::string("Expected number: ") + key);
 
     return v.As<Napi::Number>().Int32Value();
+}
+
+inline double GetDouble(const Napi::Object &obj, const char *key, double fallback = 0)
+{
+    if (!obj.Has(key))
+        throw std::runtime_error(std::string("Expected: ") + key);
+
+    Napi::Value v = obj.Get(key);
+    if (!v.IsNumber())
+        throw std::runtime_error(std::string("Expected number: ") + key);
+
+    return v.As<Napi::Number>().DoubleValue();
+}
+
+inline double GetOptionalDouble(const Napi::Object &obj, const char *key, double fallback = 0)
+{
+    if (!obj.Has(key))
+        return fallback;
+
+    Napi::Value v = obj.Get(key);
+    if (!v.IsNumber())
+        throw std::runtime_error(std::string("Expected number: ") + key);
+
+    return v.As<Napi::Number>().DoubleValue();
 }
 
 inline bool GetOptionalBool(const Napi::Object &obj, const char *key, bool fallback = false)

@@ -3,7 +3,9 @@
     {
       "target_name": "mt4manager",
       "sources": [
-           "native/positions/mt4_positions.cc",
+        "native/trades/payload_to_mt4.cc",
+        "native/trades/trade_from_napi.cc",
+        "native/positions/mt4_positions.cc",
         "native/positions/mt4_position_to_napi.cc",
         "native/positions/mt4_positions_wrap.cc",
         "native/addon.cc",

@@ -7,11 +7,18 @@
 
 #include "../mt4_client.h"
 
+#include "../trades/payload_to_mt4.h"
+#include "../trades/trade_from_napi.h"
+#include "../trades/trade_record_utils.h"
+#include "../trades/trade_transaction_utils.h"
+
 #include "../include/mt4_sdk.h"
 
 #include "../utils/mt4_errors.h"
 #include "../utils/mt4_log.h"
 #include "../utils/mt4_error_helpers.h"
+
+#include "../utils/napi_converter_utils.h" // test
 
 MT4Positions::MT4Positions(const std::shared_ptr<MT4Client> &client)
     : client_(client)
@@ -32,52 +39,27 @@ std::shared_ptr<MT4Positions> MT4Positions::CreateShared(const std::shared_ptr<M
 
 TradeRecord MT4Positions::Get(int order) const
 {
-    const char *context = "Positions.Get";
+    return GetTradeRecordByOrder(
+        "Positions.Get",
+        client_,
+        order,
+        "Position");
+}
 
-    MT4_INFO_LOG(context << " start order=" << order);
+TradeRecord MT4Positions::Create(const TradePayload &payload)
+{
+    const char *context = "Positions.Create";
 
-    MT4_ENSURE_CLIENT(context, client_);
+    MT4_INFO_LOG(context
+                 << " start login=" << payload.login
+                 << " symbol=" << payload.symbol);
 
-    CManagerInterface *manager = client_->Manager();
-    MT4_ENSURE_MANAGER(context, manager);
+    TradeTransInfo info = BuildTradeTransInfo(payload);
 
-    client_->EnsureNotPumping();
-
-    const int orders[] = {order};
-    int total = 1;
-
-    MT4_DEBUG_LOG("Calling TradeRecordsRequest order=" << order);
-
-    TradeRecord *records = manager->TradeRecordsRequest(orders, &total);
-
-    MT4_DEBUG_LOG("TradeRecordsRequest returned total=" << total << " records=" << records);
-
-    if (!records || total <= 0)
-    {
-        MT4_THROW_NOT_FOUND_WITH_ID(context, "Position", order);
-    }
-
-    const TradeRecord *found = nullptr;
-    for (int i = 0; i < total; ++i)
-    {
-        if (records[i].order == order)
-        {
-            found = &records[i];
-            break;
-        }
-    }
-
-    if (!found)
-    {
-        manager->MemFree(records);
-
-        MT4_THROW_NOT_FOUND_WITH_ID(context, "Position", order);
-    }
-
-    TradeRecord record = *found;
-    manager->MemFree(records);
-
-    MT4_INFO_LOG(context << " success order=" << order);
-
-    return record;
+    return ExecuteTradeTransaction(
+        context,
+        client_,
+        info,
+        "Open position failed",
+        "Position");
 }
