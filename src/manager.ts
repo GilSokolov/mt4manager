@@ -30,6 +30,10 @@ export default class MT4Manager {
     this.users = new Users(this.native.users);
     this.symbols = new Symbols(this.native.symbols);
     this.positions = new Positions(this.native.positions);
+
+    this.symbols.on('tick', (tick) => {
+      this.positions.HandleBidAskUpdate(tick.symbol)
+    })
   }
 
   async connect(server: string): Promise<void> {

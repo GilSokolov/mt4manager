@@ -17,7 +17,8 @@ Napi::Object MT4PositionsWrap::Init(Napi::Env env, Napi::Object exports)
             InstanceMethod("get", &MT4PositionsWrap::Get),
             InstanceMethod("create", &MT4PositionsWrap::Create),
             InstanceMethod("_setUpdateHandler", &MT4PositionsWrap::SetHandler),
-        });
+            InstanceMethod("handleBidAskUpdatet", &MT4PositionsWrap::HandleBidAskUpdate),
+        }); //
 
     constructor = Napi::Persistent(klass);
     constructor.SuppressDestruct();
@@ -101,6 +102,27 @@ Napi::Value MT4PositionsWrap::Create(const Napi::CallbackInfo &info)
         auto payload = FromNapiTrade(info[0]);
         const TradeRecord position = positions_->Create(payload);
         return ToNapiPosition(env, position);
+    }
+    catch (const MT4Error &ex)
+    {
+        return napi_utils::ThrowError(env, ex);
+    }
+    catch (const std::exception &ex)
+    {
+        return napi_utils::ThrowError(env, ex);
+    }
+}
+
+Napi::Value MT4PositionsWrap::HandleBidAskUpdate(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    try
+    {
+        const std::string symbol = napi_utils::GetString(info, 0, "symbol");
+        positions_->HandleBidAskUpdate(symbol);
+
+        return env.Undefined();
     }
     catch (const MT4Error &ex)
     {

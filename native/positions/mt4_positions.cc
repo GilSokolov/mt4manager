@@ -39,24 +39,60 @@ void MT4Positions::HandleEvent(int code, int type, void *data)
         return;
     }
 
+    HandleTradeUpdate(type, data);
+}
+
+void MT4Positions::HandleTradeUpdate(int type, void *data)
+{
+    if (!data)
+    {
+        return;
+    }
+
     const TradeRecord *trade = static_cast<const TradeRecord *>(data);
 
-    MT4_DEBUG_LOG(
-        "Trades pump update"
-        << " login=" << trade->login
-        << " type=" << type);
-
     auto handler = GetHandlerCopy();
+    if (!handler)
+    {
+        return;
+    }
 
-    if (handler)
+    MT4_DEBUG_LOG(
+        "Trades pump update login=" << trade->login
+                                    << " type=" << type);
+
+    handler(trade);
+}
+
+void MT4Positions::HandleBidAskUpdate(const std::string &symbol)
+{
+    CManagerInterface *manager = client_->Manager();
+    if (!manager)
     {
-        MT4_DEBUG_LOG("Calling trades update handler login=" << trade->login);
-        handler(trade);
+        return;
     }
-    else
+
+    int total = 0;
+    TradeRecord *trades = manager->TradesGetBySymbol(
+        const_cast<char *>(symbol.c_str()),
+        &total);
+
+    if (!trades || total <= 0)
     {
-        MT4_DEBUG_LOG("No users update handler registered");
+        if (trades)
+        {
+            manager->MemFree(trades);
+        }
+
+        return;
     }
+
+    for (int i = 0; i < total; ++i)
+    {
+        HandleTradeUpdate(PUMP_UPDATE_BIDASK, &trades[i]);
+    }
+
+    manager->MemFree(trades);
 }
 
 TradeRecord MT4Positions::Get(int order) const

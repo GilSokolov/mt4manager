@@ -13,9 +13,9 @@ async function main() {
     // logLevel: 3,
   });
 
-  await manager.symbols.subscribe("BTCUSD");
+  await manager.symbols.subscribe("EURUSD.");
 
-  manager.symbols.watch("BTCUSD", console.log);
+  manager.positions.watch(1821026789, console.log);
 
   const done = new Promise<void>((resolve) => {
     setTimeout(() => {

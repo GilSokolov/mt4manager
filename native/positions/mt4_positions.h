@@ -23,9 +23,12 @@ public:
 
     TradeRecord Get(int login) const;
     TradeRecord Create(const TradePayload &payload);
+    void HandleBidAskUpdate(const std::string &symbol);
 
 private:
     explicit MT4Positions(const std::shared_ptr<MT4Client> &client);
 
     void HandleEvent(int code, int type, void *data);
+
+    void HandleTradeUpdate(int type, void *data);
 };

@@ -23,6 +23,7 @@ private:
     Napi::Value Create(const Napi::CallbackInfo &info);
 
     Napi::Value SetHandler(const Napi::CallbackInfo &info);
+    Napi::Value HandleBidAskUpdate(const Napi::CallbackInfo &info);
 
     std::shared_ptr<MT4Positions> positions_;
     std::shared_ptr<JsCallbackBridge<TradeEventPayload>> bridge_;

@@ -16,6 +16,10 @@ export class Positions extends EventEmitter {
     });
   }
 
+  HandleBidAskUpdate(symbol: string) {
+    return this.native.handleBidAskUpdatet(symbol);
+  }
+
   get(order: number): Promise<TradeRecord> {
     if (typeof order !== "number") {
       return Promise.reject("order must be number");
