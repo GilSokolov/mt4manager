@@ -2,6 +2,15 @@
 
 #include "../utils/napi_converter_utils.h"
 
+std::vector<napi_value> BuildTradeArgs(
+    Napi::Env env,
+    const TradeEventPayload &payload)
+{
+    return {
+        ToNapiPosition(env, payload.trade),
+    };
+}
+
 Napi::Object ToNapiPosition(Napi::Env env, const TradeRecord &trade)
 {
     Napi::Object obj = Napi::Object::New(env);

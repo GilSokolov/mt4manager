@@ -16,6 +16,7 @@ Napi::Object MT4PositionsWrap::Init(Napi::Env env, Napi::Object exports)
         {
             InstanceMethod("get", &MT4PositionsWrap::Get),
             InstanceMethod("create", &MT4PositionsWrap::Create),
+            InstanceMethod("_setUpdateHandler", &MT4PositionsWrap::SetHandler),
         });
 
     constructor = Napi::Persistent(klass);
@@ -41,8 +42,34 @@ Napi::Object MT4PositionsWrap::NewInstance(
         Napi::ObjectWrap<MT4PositionsWrap>::Unwrap(obj);
 
     wrap->positions_ = MT4Positions::CreateShared(client);
+    wrap->bridge_ =
+        std::make_shared<JsCallbackBridge<TradeEventPayload>>("MT4TradeHandler");
 
     return scope.Escape(obj).ToObject();
+}
+
+Napi::Value MT4PositionsWrap::SetHandler(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    try
+    {
+        Napi::Function handler = napi_utils::GetFunction(info, 0, "handler");
+
+        bridge_->SetHandler(env, handler);
+
+        positions_->SetHandler(
+            [bridge = bridge_](const TradeRecord *trade)
+            {
+                bridge->CallJs(TradeEventPayload{*trade}, BuildTradeArgs);
+            });
+
+        return env.Undefined();
+    }
+    catch (const std::exception &ex)
+    {
+        return napi_utils::ThrowError(env, ex);
+    }
 }
 
 Napi::Value MT4PositionsWrap::Get(const Napi::CallbackInfo &info)

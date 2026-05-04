@@ -8,13 +8,17 @@
 #include "../include/mt4_sdk.h"
 #include "../trades/trade_types.h"
 
+#include "../MT4PumpSubscriber.h"
+
+using TradeHandler = std::function<void(const TradeRecord *)>;
+
 class MT4Client;
 
-class MT4Positions
+class MT4Positions : public MT4PumpSubscriber<MT4Positions, TradeHandler>
 {
-public:
-    static std::shared_ptr<MT4Positions> CreateShared(const std::shared_ptr<MT4Client> &client);
+    friend class MT4PumpSubscriber<MT4Positions, TradeHandler>;
 
+public:
     ~MT4Positions();
 
     TradeRecord Get(int login) const;
@@ -23,5 +27,5 @@ public:
 private:
     explicit MT4Positions(const std::shared_ptr<MT4Client> &client);
 
-    std::shared_ptr<MT4Client> client_;
+    void HandleEvent(int code, int type, void *data);
 };

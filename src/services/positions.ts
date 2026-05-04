@@ -1,8 +1,20 @@
+import { Listener } from "../types";
 import { TradeRecord } from "../types/trade-record";
 import { TradeExecutionMode, TradeRequest } from "../types/trade-request";
+import { EventEmitter } from "node:events";
 
-export class Positions {
-  constructor(private native: any) {}
+type TradeRecordListener = Listener<TradeRecord>;
+
+export class Positions extends EventEmitter {
+  private watches = new Map<number, Set<TradeRecordListener>>();
+
+  constructor(private native: any) {
+    super();
+    this.native._setUpdateHandler((trade: TradeRecord) => {
+      this.emit("update", trade);
+      this.dispatchWatch(trade);
+    });
+  }
 
   get(order: number): Promise<TradeRecord> {
     if (typeof order !== "number") {
@@ -45,6 +57,47 @@ export class Positions {
   //   closeAll(login?: number) {
   //     return this.native.closeAll(login);
   //   }
+
+  private dispatchWatch(trade: TradeRecord) {
+    const listeners = this.watches.get(trade.login);
+    if (!listeners) return;
+
+    for (const listener of listeners) {
+      listener(trade);
+    }
+  }
+
+  watch(target: number, listener: TradeRecordListener) {
+    const set = this.watches.get(target) ?? new Set<TradeRecordListener>();
+    set.add(listener);
+    this.watches.set(target, set);
+
+    return () => {
+      this.unwatch(target, listener);
+    };
+  }
+
+  unwatch(target: number, listener?: TradeRecordListener) {
+    if (!listener) {
+      this.watches.delete(target);
+      return;
+    }
+
+    const set = this.watches.get(target);
+    if (!set) {
+      return;
+    }
+
+    set.delete(listener);
+
+    if (set.size === 0) {
+      this.watches.delete(target);
+    }
+  }
+
+  unwatchAll() {
+    this.watches.clear();
+  }
 }
 
 function normalizeOpenTrade(input: TradeRequest, mode: TradeExecutionMode) {

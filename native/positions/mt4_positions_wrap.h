@@ -3,6 +3,8 @@
 #include <napi.h>
 #include <memory>
 #include "mt4_positions.h"
+#include "../utils/js_callback_bridge.h"
+#include "mt4_position_to_napi.h"
 
 class MT4PositionsWrap : public Napi::ObjectWrap<MT4PositionsWrap>
 {
@@ -15,10 +17,13 @@ public:
     MT4PositionsWrap(const Napi::CallbackInfo &info);
 
 private:
-    std::shared_ptr<MT4Positions> positions_;
+    static Napi::FunctionReference constructor;
 
     Napi::Value Get(const Napi::CallbackInfo &info);
     Napi::Value Create(const Napi::CallbackInfo &info);
 
-    static Napi::FunctionReference constructor;
+    Napi::Value SetHandler(const Napi::CallbackInfo &info);
+
+    std::shared_ptr<MT4Positions> positions_;
+    std::shared_ptr<JsCallbackBridge<TradeEventPayload>> bridge_;
 };

@@ -21,7 +21,7 @@
 #include "../utils/napi_converter_utils.h" // test
 
 MT4Positions::MT4Positions(const std::shared_ptr<MT4Client> &client)
-    : client_(client)
+    : MT4PumpSubscriber(client)
 {
     MT4_DEBUG_LOG("MT4Positions created");
 }
@@ -29,12 +29,34 @@ MT4Positions::MT4Positions(const std::shared_ptr<MT4Client> &client)
 MT4Positions::~MT4Positions()
 {
     MT4_DEBUG_LOG("MT4Positions destroyed");
+    DetachPumpListener();
 }
 
-std::shared_ptr<MT4Positions> MT4Positions::CreateShared(const std::shared_ptr<MT4Client> &client)
+void MT4Positions::HandleEvent(int code, int type, void *data)
 {
-    auto positions = std::shared_ptr<MT4Positions>(new MT4Positions(client));
-    return positions;
+    if (code != PUMP_UPDATE_TRADES || !data)
+    {
+        return;
+    }
+
+    const TradeRecord *trade = static_cast<const TradeRecord *>(data);
+
+    MT4_DEBUG_LOG(
+        "Trades pump update"
+        << " login=" << trade->login
+        << " type=" << type);
+
+    auto handler = GetHandlerCopy();
+
+    if (handler)
+    {
+        MT4_DEBUG_LOG("Calling trades update handler login=" << trade->login);
+        handler(trade);
+    }
+    else
+    {
+        MT4_DEBUG_LOG("No users update handler registered");
+    }
 }
 
 TradeRecord MT4Positions::Get(int order) const
