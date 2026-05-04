@@ -9,7 +9,7 @@
 #include "../utils/napi_converter_utils.h"
 
 MT4Symbols::MT4Symbols(const std::shared_ptr<MT4Client> &client)
-    : client_(client)
+    : MT4PumpSubscriber(client)
 {
     MT4_DEBUG_LOG("MT4Symbols created");
 }
@@ -17,52 +17,7 @@ MT4Symbols::MT4Symbols(const std::shared_ptr<MT4Client> &client)
 MT4Symbols::~MT4Symbols()
 {
     MT4_DEBUG_LOG("MT4Symbols destroyed");
-    if (client_ && pump_listener_id_ >= 0)
-    {
-        MT4_DEBUG_LOG("Removing symbols pump listener id=" << pump_listener_id_);
-        client_->RemovePumpListener(pump_listener_id_);
-        pump_listener_id_ = -1;
-    }
-}
-
-std::shared_ptr<MT4Symbols> MT4Symbols::CreateShared(
-    const std::shared_ptr<MT4Client> &client)
-{
-    auto symbols = std::shared_ptr<MT4Symbols>(new MT4Symbols(client));
-    symbols->AttachPumpListener();
-    return symbols;
-}
-
-void MT4Symbols::AttachPumpListener()
-{
-    MT4_DEBUG_LOG("Attaching symbols pump listener");
-    std::weak_ptr<MT4Symbols> weak_self = shared_from_this();
-
-    pump_listener_id_ = client_->AddPumpListener(
-        [weak_self](int code, int type, void *data)
-        {
-            if (auto self = weak_self.lock())
-            {
-                self->HandleEvent(code, type, data);
-            }
-        });
-    MT4_DEBUG_LOG("Attached symbols pump listener id=" << pump_listener_id_);
-}
-
-void MT4Symbols::DetachPumpListener()
-{
-    if (pump_listener_id_ != -1)
-    {
-        MT4_DEBUG_LOG("Detaching symbols pump listener id=" << pump_listener_id_);
-        client_->RemovePumpListener(pump_listener_id_);
-        pump_listener_id_ = -1;
-    }
-}
-
-void MT4Symbols::SetTickHandler(TickHandler handler)
-{
-    std::lock_guard<std::mutex> lock(tick_handler_mutex_);
-    tick_handler_ = std::move(handler);
+    DetachPumpListener();
 }
 
 SymbolInfo MT4Symbols::Get(const std::string &symbol) const
@@ -157,11 +112,7 @@ void MT4Symbols::HandleEvent(int code, int type, void *data)
         return;
     }
 
-    TickHandler handler;
-    {
-        std::lock_guard<std::mutex> lock(tick_handler_mutex_);
-        handler = tick_handler_;
-    }
+    auto handler = GetHandlerCopy();
 
     if (!handler)
     {

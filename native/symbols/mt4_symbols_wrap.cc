@@ -99,7 +99,7 @@ Napi::Value MT4SymbolsWrap::SetTickHandler(const Napi::CallbackInfo &info)
 
         bridge_->SetHandler(env, handler);
 
-        symbols_->SetTickHandler(
+        symbols_->SetHandler(
             [bridge = bridge_](const SymbolInfo *symbol)
             {
                 bridge->CallJs(SymbolPayload{*symbol}, BuildSymbolArgs);
