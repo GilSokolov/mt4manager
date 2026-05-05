@@ -24,9 +24,11 @@ public:
 
     int Create(UserRecord &user) const;
     void Update(const UserRecord &user) const;
+    void HandleTradeUpdate(int login);
 
 private:
     explicit MT4Users(const std::shared_ptr<MT4Client> &client);
 
     void HandleEvent(int code, int type, void *data);
+    void HandleUserUpdate(int type, void *data);
 };

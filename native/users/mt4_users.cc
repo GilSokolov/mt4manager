@@ -29,24 +29,7 @@ void MT4Users::HandleEvent(int code, int type, void *data)
         return;
     }
 
-    const UserRecord *user = static_cast<const UserRecord *>(data);
-
-    MT4_DEBUG_LOG(
-        "User pump update"
-        << " login=" << user->login
-        << " type=" << type);
-
-    UserHandler handler = GetHandlerCopy();
-
-    if (handler)
-    {
-        MT4_DEBUG_LOG("Calling users update handler login=" << user->login);
-        handler(user, type);
-    }
-    else
-    {
-        MT4_DEBUG_LOG("No users update handler registered");
-    }
+    HandleUserUpdate(type, data);
 }
 
 UserRecord MT4Users::Get(int login) const
@@ -157,4 +140,57 @@ void MT4Users::Update(const UserRecord &user) const
     ThrowMt4Error("UserRecordUpdate", result, manager);
 
     MT4_INFO_LOG("Users.Update success login=" << user.login);
+}
+
+void MT4Users::HandleUserUpdate(int type, void *data)
+{
+    if (!data)
+    {
+        return;
+    }
+
+    const UserRecord *user = static_cast<const UserRecord *>(data);
+
+    MT4_DEBUG_LOG(
+        "User pump update"
+        << " login=" << user->login
+        << " type=" << type);
+
+    UserHandler handler = GetHandlerCopy();
+
+    if (handler)
+    {
+        MT4_DEBUG_LOG("Calling users update handler login=" << user->login);
+        handler(user, type);
+    }
+    else
+    {
+        MT4_DEBUG_LOG("No users update handler registered");
+    }
+}
+
+void MT4Users::HandleTradeUpdate(int login)
+{
+    CManagerInterface *manager = client_->Manager();
+    if (!manager)
+        return;
+
+    UserRecord user{};
+    int result = manager->UserRecordGet(login, &user);
+
+    MT4_DEBUG_LOG("UserRecordGet returned code=" << result);
+
+    if (result != RET_OK)
+    {
+        ThrowMt4Error("UserRecordGet", result, manager);
+        return;
+    }
+    // for margins later
+    // MarginLevel margin{};
+    // int result_margin = manager->MarginLevelGet(login, user.group, &margin);
+
+    // std::cout
+    //     << " result_margin: " << result_margin << " equity: " << margin.equity << std::endl;
+
+    HandleUserUpdate(TRANS_UPDATE, &user);
 }

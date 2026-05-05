@@ -23,6 +23,10 @@ export class Users extends EventEmitter {
     });
   }
 
+  handleTradeUpdate(login: number) {
+    return this.native.handleTradeUpdate(login);
+  }
+
   private watches = new Map<number, Set<UserListener>>();
 
   on(eventName: EventTypeName, listener: (user: User) => void): this {

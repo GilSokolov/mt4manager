@@ -75,6 +75,7 @@ export interface NativeUsersApi {
   get(login: number): Promise<User>;
   create(input: CreateUserInput): Promise<User>;
   update(login: number, input: UpdateUserInput): Promise<User>;
+  handleTradeUpdate(login: number): void;
 
   _setUpdateHandler(handler: (user: User, type: EventType) => void): void;
 }

@@ -15,7 +15,7 @@ async function main() {
 
   await manager.symbols.subscribe("EURUSD.");
 
-  manager.positions.on("update", console.log);
+  manager.users.on("update", console.log);
 
   const done = new Promise<void>((resolve) => {
     setTimeout(() => {

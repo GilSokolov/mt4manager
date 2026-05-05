@@ -21,6 +21,7 @@ Napi::Function MT4UsersWrap::Init(Napi::Env env)
             InstanceMethod("create", &MT4UsersWrap::Create),
             InstanceMethod("update", &MT4UsersWrap::Update),
             InstanceMethod("_setUpdateHandler", &MT4UsersWrap::SetHandler),
+            InstanceMethod("handleTradeUpdate", &MT4UsersWrap::HandleTradeUpdate),
         });
 
     // Store constructor in a persistent reference so it can be reused
@@ -154,6 +155,27 @@ Napi::Value MT4UsersWrap::SetHandler(const Napi::CallbackInfo &info)
             });
 
         return env.Undefined();
+    }
+    catch (const std::exception &ex)
+    {
+        return napi_utils::ThrowError(env, ex);
+    }
+}
+
+Napi::Value MT4UsersWrap::HandleTradeUpdate(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    try
+    {
+        const int login = napi_utils::GetInt32(info, 0, "login");
+        users_->HandleTradeUpdate(login);
+
+        return env.Undefined();
+    }
+    catch (const MT4Error &ex)
+    {
+        return napi_utils::ThrowError(env, ex);
     }
     catch (const std::exception &ex)
     {

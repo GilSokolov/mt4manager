@@ -43,6 +43,10 @@ export default class MT4Manager {
           this.positions.handleEvent(event, trade);
           this.transactions.handleEvent(event, trade);
         }
+
+        if (event === "add" || event === "delete") {
+          this.users.handleTradeUpdate(trade.login);
+        }
       },
     );
 
