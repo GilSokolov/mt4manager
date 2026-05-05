@@ -17,6 +17,7 @@ public:
         const std::shared_ptr<MT4Client> &client);
 
     MT4TradesWrap(const Napi::CallbackInfo &info);
+    ~MT4TradesWrap();
 
 private:
     static Napi::FunctionReference constructor;

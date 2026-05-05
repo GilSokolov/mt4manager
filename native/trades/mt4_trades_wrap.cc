@@ -46,6 +46,14 @@ Napi::Object MT4TradesWrap::NewInstance(
     return scope.Escape(obj).ToObject();
 }
 
+MT4TradesWrap::~MT4TradesWrap()
+{
+    if (trades_)
+    {
+        trades_->SetHandler(nullptr);
+    }
+}
+
 Napi::Value MT4TradesWrap::SetHandler(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
