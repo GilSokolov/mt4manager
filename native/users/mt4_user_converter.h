@@ -16,6 +16,7 @@ void ApplyNapiUserPatch(
 struct UserPayload
 {
     UserRecord user;
+    int type;
 };
 
 std::vector<napi_value> BuildUserArgs(

@@ -7,7 +7,7 @@ std::vector<napi_value> BuildUserArgs(
 {
     return {
         ToNapiUser(env, payload.user),
-    };
+        Napi::Number::New(env, payload.type)};
 }
 
 Napi::Object ToNapiUser(Napi::Env env, const UserRecord &user)

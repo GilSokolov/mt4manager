@@ -11,7 +11,7 @@
 #include "../utils/mt4_error_helpers.h"
 
 MT4Users::MT4Users(const std::shared_ptr<MT4Client> &client)
-    : client_(client)
+    : MT4PumpSubscriber(client)
 {
     MT4_DEBUG_LOG("MT4Users created");
 }
@@ -19,45 +19,7 @@ MT4Users::MT4Users(const std::shared_ptr<MT4Client> &client)
 MT4Users::~MT4Users()
 {
     MT4_DEBUG_LOG("MT4Users destroyed");
-    if (client_ && pump_listener_id_ >= 0)
-    {
-        MT4_DEBUG_LOG("Removing users pump listener id=" << pump_listener_id_);
-        client_->RemovePumpListener(pump_listener_id_);
-        pump_listener_id_ = -1;
-    }
-}
-
-std::shared_ptr<MT4Users> MT4Users::CreateShared(const std::shared_ptr<MT4Client> &client)
-{
-    auto users = std::shared_ptr<MT4Users>(new MT4Users(client));
-    users->AttachPumpListener();
-    return users;
-}
-
-void MT4Users::AttachPumpListener()
-{
-    MT4_DEBUG_LOG("Attaching users pump listener");
-    std::weak_ptr<MT4Users> weak_self = shared_from_this();
-
-    pump_listener_id_ = client_->AddPumpListener(
-        [weak_self](int code, int type, void *data)
-        {
-            if (auto self = weak_self.lock())
-            {
-                self->HandleEvent(code, type, data);
-            }
-        });
-    MT4_DEBUG_LOG("Attached users pump listener id=" << pump_listener_id_);
-}
-
-void MT4Users::DetachPumpListener()
-{
-    if (pump_listener_id_ != -1)
-    {
-        MT4_DEBUG_LOG("Detaching users pump listener id=" << pump_listener_id_);
-        client_->RemovePumpListener(pump_listener_id_);
-        pump_listener_id_ = -1;
-    }
+    DetachPumpListener();
 }
 
 void MT4Users::HandleEvent(int code, int type, void *data)
@@ -74,27 +36,17 @@ void MT4Users::HandleEvent(int code, int type, void *data)
         << " login=" << user->login
         << " type=" << type);
 
-    UpdateHandler handler;
-    {
-        std::lock_guard<std::mutex> lock(update_handler_mutex_);
-        handler = update_handler_;
-    }
+    UserHandler handler = GetHandlerCopy();
 
     if (handler)
     {
         MT4_DEBUG_LOG("Calling users update handler login=" << user->login);
-        handler(user);
+        handler(user, type);
     }
     else
     {
         MT4_DEBUG_LOG("No users update handler registered");
     }
-}
-
-void MT4Users::SetUpdateHandler(UpdateHandler handler)
-{
-    std::lock_guard<std::mutex> lock(update_handler_mutex_);
-    update_handler_ = std::move(handler);
 }
 
 UserRecord MT4Users::Get(int login) const

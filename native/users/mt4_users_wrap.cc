@@ -20,7 +20,7 @@ Napi::Function MT4UsersWrap::Init(Napi::Env env)
             InstanceMethod("get", &MT4UsersWrap::Get),
             InstanceMethod("create", &MT4UsersWrap::Create),
             InstanceMethod("update", &MT4UsersWrap::Update),
-            InstanceMethod("_setUpdateHandler", &MT4UsersWrap::SetUpdateHandler),
+            InstanceMethod("_setUpdateHandler", &MT4UsersWrap::SetHandler),
         });
 
     // Store constructor in a persistent reference so it can be reused
@@ -49,7 +49,7 @@ Napi::Object MT4UsersWrap::NewInstance(
 
     // Create bridge responsible for forwarding native events (updates)
     // to a JS callback in a thread-safe way.
-    wrap->update_bridge_ =
+    wrap->bridge_ =
         std::make_shared<JsCallbackBridge<UserPayload>>("MT4UsersUpdateHandler");
 
     // Return the JS object, escaping it from the local handle scope.
@@ -66,7 +66,7 @@ MT4UsersWrap::~MT4UsersWrap()
 
     if (users_)
     {
-        users_->SetUpdateHandler(nullptr);
+        users_->SetHandler(nullptr);
     }
 }
 
@@ -137,7 +137,7 @@ Napi::Value MT4UsersWrap::Update(const Napi::CallbackInfo &info)
     }
 }
 
-Napi::Value MT4UsersWrap::SetUpdateHandler(const Napi::CallbackInfo &info)
+Napi::Value MT4UsersWrap::SetHandler(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
 
@@ -145,12 +145,12 @@ Napi::Value MT4UsersWrap::SetUpdateHandler(const Napi::CallbackInfo &info)
     {
         Napi::Function handler = napi_utils::GetFunction(info, 0, "handler");
 
-        update_bridge_->SetHandler(env, handler);
+        bridge_->SetHandler(env, handler);
 
-        users_->SetUpdateHandler(
-            [bridge = update_bridge_](const UserRecord *user)
+        users_->SetHandler(
+            [bridge = bridge_](const UserRecord *user, int type)
             {
-                bridge->CallJs(UserPayload{*user}, BuildUserArgs);
+                bridge->CallJs(UserPayload{*user, type}, BuildUserArgs);
             });
 
         return env.Undefined();

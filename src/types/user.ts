@@ -1,3 +1,5 @@
+import { EventType } from "./events-types";
+
 export interface User {
   // --- common settings
   login: number;
@@ -74,5 +76,5 @@ export interface NativeUsersApi {
   create(input: CreateUserInput): Promise<User>;
   update(login: number, input: UpdateUserInput): Promise<User>;
 
-  _setUpdateHandler(handler: (user: User) => void): void;
+  _setUpdateHandler(handler: (user: User, type: EventType) => void): void;
 }

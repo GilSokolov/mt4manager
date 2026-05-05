@@ -1,4 +1,5 @@
 import { EventEmitter } from "node:events";
+import { EventTypeName } from "../types";
 import { Listener } from "../types/manager";
 import {
   CreateUserInput,
@@ -6,19 +7,27 @@ import {
   UpdateUserInput,
   User,
 } from "../types/user";
+import { toEventType } from "../utils/to-event-type";
 
 type UserListener = Listener<User>;
 
 export class Users extends EventEmitter {
   constructor(private readonly native: NativeUsersApi) {
     super();
-    this.native._setUpdateHandler((user) => {
-      this.emit("update", user);
-      this.dispatchWatch(user);
+    this.native._setUpdateHandler((user, type) => {
+      const event = toEventType(type);
+      if (event !== "unknown") {
+        this.emit(event, user);
+        this.dispatchWatch(user);
+      }
     });
   }
 
   private watches = new Map<number, Set<UserListener>>();
+
+  on(eventName: EventTypeName, listener: (user: User) => void): this {
+    return super.on(eventName, listener);
+  }
 
   async get(login: number): Promise<User | null> {
     try {

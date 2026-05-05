@@ -28,8 +28,8 @@ private:
     Napi::Value Get(const Napi::CallbackInfo &info);
     Napi::Value Create(const Napi::CallbackInfo &info);
     Napi::Value Update(const Napi::CallbackInfo &info);
-    Napi::Value SetUpdateHandler(const Napi::CallbackInfo &info);
+    Napi::Value SetHandler(const Napi::CallbackInfo &info);
 
     std::shared_ptr<MT4Users> users_;
-    std::shared_ptr<JsCallbackBridge<UserPayload>> update_bridge_;
+    std::shared_ptr<JsCallbackBridge<UserPayload>> bridge_;
 };
