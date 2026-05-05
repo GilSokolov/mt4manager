@@ -8,7 +8,7 @@ std::vector<napi_value> BuildTradeArgs(
 {
     return {
         ToNapiTrade(env, payload.trade),
-    };
+        Napi::Number::New(env, payload.type)};
 }
 
 Napi::Object ToNapiTrade(Napi::Env env, const TradeRecord &trade)

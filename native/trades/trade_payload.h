@@ -5,4 +5,5 @@
 struct TradePayload
 {
     TradeRecord trade;
+    int type;
 };

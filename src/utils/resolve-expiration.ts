@@ -1,5 +1,3 @@
-import { TradeCommand } from "../types";
-
 export type ExpirationMode = "none" | "optional" | "required";
 
 function toExpirationSeconds(expiration?: number | Date): number | undefined {

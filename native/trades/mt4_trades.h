@@ -11,7 +11,7 @@
 
 #include "../MT4PumpSubscriber.h"
 
-using TradeHandler = std::function<void(const TradeRecord *)>;
+using TradeHandler = std::function<void(const TradeRecord *, int)>;
 
 class MT4Client;
 

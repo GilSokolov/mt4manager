@@ -56,7 +56,7 @@ void MT4Trades::HandleTradeUpdate(int type, void *data)
         "Trades pump update login=" << trade->login
                                     << " type=" << type);
 
-    handler(trade);
+    handler(trade, type);
 }
 
 void MT4Trades::HandleBidAskUpdate(const std::string &symbol)
@@ -84,7 +84,7 @@ void MT4Trades::HandleBidAskUpdate(const std::string &symbol)
 
     for (int i = 0; i < total; ++i)
     {
-        HandleTradeUpdate(PUMP_UPDATE_BIDASK, &trades[i]);
+        HandleTradeUpdate(TRANS_UPDATE, &trades[i]);
     }
 
     manager->MemFree(trades);

@@ -1,9 +1,9 @@
 import { EventEmitter } from "node:events";
 import { Listener } from "../types";
-import { TradeCommand, TradeRecord } from "../types/trade-record";
+import { TradeCommand, TradeRecord, EventTypeName } from "../types";
 import { TradeExecutionMode } from "../types/trade-request";
 import { Transaction, TransactionRequest } from "../types/transaction";
-import { ExpirationMode, resolveExpiration } from "../utils/resolveExpiration";
+import { ExpirationMode, resolveExpiration } from "../utils/resolve-expiration";
 
 type TradeRecordListener = Listener<TradeRecord>;
 
@@ -26,12 +26,19 @@ export class Transactions extends EventEmitter {
 
   constructor(private native: any) {
     super();
-    this.native._setUpdateHandler((trade: TradeRecord) => {
-      if (isTransactionTrade(trade)) {
-        this.emit("update", trade);
-        this.dispatchWatch(trade);
-      }
-    });
+  }
+
+  handleEvent = (event: EventTypeName, trade: TradeRecord) => {
+    if (!isTransactionTrade(trade)) {
+      return;
+    }
+
+    this.emit(event, trade);
+    this.dispatchWatch(trade);
+  };
+
+  on(eventName: EventTypeName, listener: (trade: TradeRecord) => void): this {
+    return super.on(eventName, listener);
   }
 
   HandleBidAskUpdate(symbol: string) {

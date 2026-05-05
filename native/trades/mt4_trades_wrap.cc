@@ -57,9 +57,9 @@ Napi::Value MT4TradesWrap::SetHandler(const Napi::CallbackInfo &info)
         bridge_->SetHandler(env, handler);
 
         trades_->SetHandler(
-            [bridge = bridge_](const TradeRecord *trade)
+            [bridge = bridge_](const TradeRecord *trade, int type)
             {
-                bridge->CallJs(TradePayload{*trade}, BuildTradeArgs);
+                bridge->CallJs(TradePayload{*trade, type}, BuildTradeArgs);
             });
 
         return env.Undefined();

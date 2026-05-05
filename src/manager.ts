@@ -2,6 +2,7 @@ import { Positions } from "./services/positions";
 import { Symbols } from "./services/symbols";
 import { Transactions } from "./services/transactions";
 import { Users } from "./services/users";
+import { TradeRecord, EventType } from "./types";
 import {
   ManagerConfig,
   NativeMT4Manager,
@@ -9,6 +10,7 @@ import {
 } from "./types/manager";
 
 import { loadBinding } from "./utils/paths";
+import { toEventType } from "./utils/to-event-type";
 
 const nativeBinding = loadBinding();
 
@@ -33,6 +35,16 @@ export default class MT4Manager {
     this.symbols = new Symbols(this.native.symbols);
     this.positions = new Positions(this.native.trades);
     this.transactions = new Transactions(this.native.trades);
+
+    this.native.trades._setUpdateHandler(
+      (trade: TradeRecord, type: EventType) => {
+        const event = toEventType(type);
+        if (event !== "unknown") {
+          this.positions.handleEvent(event, trade);
+          this.transactions.handleEvent(event, trade);
+        }
+      },
+    );
 
     this.symbols.on("tick", (tick) => {
       this.positions.HandleBidAskUpdate(tick.symbol);
