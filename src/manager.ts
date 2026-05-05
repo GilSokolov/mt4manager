@@ -1,5 +1,6 @@
 import { Positions } from "./services/positions";
 import { Symbols } from "./services/symbols";
+import { Transactions } from "./services/transactions";
 import { Users } from "./services/users";
 import {
   ManagerConfig,
@@ -16,6 +17,7 @@ export default class MT4Manager {
   public readonly users: Users;
   public readonly symbols: Symbols;
   public readonly positions: Positions;
+  public readonly transactions: Transactions;
 
   #pumping = false;
   #pumpConfig: PumpingOptions = normalizePumpingOptions();
@@ -30,6 +32,7 @@ export default class MT4Manager {
     this.users = new Users(this.native.users);
     this.symbols = new Symbols(this.native.symbols);
     this.positions = new Positions(this.native.trades);
+    this.transactions = new Transactions(this.native.trades);
 
     this.symbols.on("tick", (tick) => {
       this.positions.HandleBidAskUpdate(tick.symbol);

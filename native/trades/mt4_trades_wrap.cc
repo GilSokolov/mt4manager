@@ -16,7 +16,7 @@ Napi::Object MT4TradesWrap::Init(Napi::Env env)
             InstanceMethod("get", &MT4TradesWrap::Get),
             InstanceMethod("execute", &MT4TradesWrap::Execute),
             InstanceMethod("_setUpdateHandler", &MT4TradesWrap::SetHandler),
-            InstanceMethod("handleBidAskUpdatet", &MT4TradesWrap::HandleBidAskUpdate),
+            InstanceMethod("handleBidAskUpdate", &MT4TradesWrap::HandleBidAskUpdate),
         });
 
     constructor = Napi::Persistent(klass);
@@ -98,8 +98,8 @@ Napi::Value MT4TradesWrap::Execute(const Napi::CallbackInfo &info)
     {
         TradeRequest request = FromNapiTrade(info[0]);
         const int orderId = trades_->Execute(request);
-        TradeRecord trade = trades_->Get(orderId);
 
+        const TradeRecord trade = trades_->Get(orderId);
         return ToNapiTrade(env, trade);
     }
     catch (const MT4Error &ex)

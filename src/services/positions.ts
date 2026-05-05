@@ -1,9 +1,15 @@
 import { Listener } from "../types";
-import { TradeRecord } from "../types/trade-record";
+import { TradeCommand, TradeRecord } from "../types/trade-record";
 import { TradeExecutionMode, TradeRequest } from "../types/trade-request";
 import { EventEmitter } from "node:events";
 
 type TradeRecordListener = Listener<TradeRecord>;
+
+function isPositionTrade(trade: TradeRecord) {
+  return (
+    trade.cmd !== TradeCommand.Balance && trade.cmd !== TradeCommand.Credit
+  );
+}
 
 export class Positions extends EventEmitter {
   private watches = new Map<number, Set<TradeRecordListener>>();
@@ -11,13 +17,15 @@ export class Positions extends EventEmitter {
   constructor(private native: any) {
     super();
     this.native._setUpdateHandler((trade: TradeRecord) => {
-      this.emit("update", trade);
-      this.dispatchWatch(trade);
+      if (isPositionTrade(trade)) {
+        this.emit("update", trade);
+        this.dispatchWatch(trade);
+      }
     });
   }
 
   HandleBidAskUpdate(symbol: string) {
-    return this.native.handleBidAskUpdatet(symbol);
+    return this.native.handleBidAskUpdate(symbol);
   }
 
   get(order: number): Promise<TradeRecord> {
@@ -42,25 +50,7 @@ export class Positions extends EventEmitter {
       deviation: input.deviation || 0,
       price: input.price,
     });
-
-    // mode = TT_BR_ORDER_CLOSE
-    // id = the ticket of the order to close
-    // price = close price
-    // volume = volume in lots to close an order
-    // symbol = symbol name (optional)
   }
-
-  //   close(ticket: number) {
-  //     if (typeof ticket !== "number") {
-  //       return Promise.reject("ticket must be number");
-  //     }
-
-  //     return this.native.close(ticket);
-  //   }
-
-  //   closeAll(login?: number) {
-  //     return this.native.closeAll(login);
-  //   }
 
   private dispatchWatch(trade: TradeRecord) {
     const listeners = this.watches.get(trade.login);
