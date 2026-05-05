@@ -1,17 +1,17 @@
-#include "mt4_position_to_napi.h"
+#include "mt4_trades_to_napi.h"
 
 #include "../utils/napi_converter_utils.h"
 
 std::vector<napi_value> BuildTradeArgs(
     Napi::Env env,
-    const TradeEventPayload &payload)
+    const TradePayload &payload)
 {
     return {
-        ToNapiPosition(env, payload.trade),
+        ToNapiTrade(env, payload.trade),
     };
 }
 
-Napi::Object ToNapiPosition(Napi::Env env, const TradeRecord &trade)
+Napi::Object ToNapiTrade(Napi::Env env, const TradeRecord &trade)
 {
     Napi::Object obj = Napi::Object::New(env);
 

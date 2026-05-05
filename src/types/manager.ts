@@ -33,7 +33,7 @@ export interface NativeMT4Manager {
 
   users: NativeUsersApi;
   symbols: NativeSymbolsApi;
-  positions: any;
+  trades: any;
 }
 
 export type MT4ManagerFactoryConfig = {

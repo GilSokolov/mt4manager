@@ -3,11 +3,11 @@
     {
       "target_name": "mt4manager",
       "sources": [
-        "native/trades/payload_to_mt4.cc",
-        "native/trades/trade_from_napi.cc",
-        "native/positions/mt4_positions.cc",
-        "native/positions/mt4_position_to_napi.cc",
-        "native/positions/mt4_positions_wrap.cc",
+        "native/trades/mt4_trades_from_napi.cc",
+        "native/trades/mt4_trades_to_napi.cc",
+        "native/trades/mt4_trades_wrap.cc",
+        "native/trades/mt4_trades.cc",
+        "native/trades/trade_request_to_mt4.cc",
         "native/addon.cc",
         "native/mt4_manager_wrap.cc",
         "native/mt4_client.cc",

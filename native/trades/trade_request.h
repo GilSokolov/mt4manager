@@ -2,7 +2,7 @@
 
 #include <string>
 
-struct TradePayload
+struct TradeRequest
 {
     int id = 0;
 

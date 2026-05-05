@@ -1,16 +1,17 @@
-#include "trade_from_napi.h"
+#include "mt4_trades_from_napi.h"
+
 #include "../utils/napi_converter_utils.h"
 
-TradePayload FromNapiTrade(const Napi::Value &value)
+TradeRequest FromNapiTrade(const Napi::Value &value)
 {
     if (!value.IsObject())
     {
-        throw std::runtime_error("Expected object for trade payload");
+        throw std::runtime_error("Expected object for trade request");
     }
 
     Napi::Object obj = value.As<Napi::Object>();
 
-    TradePayload p{};
+    TradeRequest p{};
 
     p.login = GetOptionalInt(obj, "login");
     p.symbol = GetOptionalString(obj, "symbol");

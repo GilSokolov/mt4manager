@@ -31,11 +31,11 @@ export class Positions extends EventEmitter {
   open(input: TradeRequest) {
     const request = normalizeOpenTrade(input, TradeExecutionMode.Open);
 
-    return this.native.create(request);
+    return this.native.execute(request);
   }
 
   close(input: Pick<TradeRequest, "id" | "deviation" | "volume" | "price">) {
-    return this.native.create({
+    return this.native.execute({
       mode: TradeExecutionMode.Close,
       id: input.id,
       volume: input.volume,

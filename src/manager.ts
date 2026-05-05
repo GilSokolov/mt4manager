@@ -29,11 +29,11 @@ export default class MT4Manager {
     this.native = new nativeBinding.MT4Manager(config);
     this.users = new Users(this.native.users);
     this.symbols = new Symbols(this.native.symbols);
-    this.positions = new Positions(this.native.positions);
+    this.positions = new Positions(this.native.trades);
 
-    this.symbols.on('tick', (tick) => {
-      this.positions.HandleBidAskUpdate(tick.symbol)
-    })
+    this.symbols.on("tick", (tick) => {
+      this.positions.HandleBidAskUpdate(tick.symbol);
+    });
   }
 
   async connect(server: string): Promise<void> {
