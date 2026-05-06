@@ -107,6 +107,11 @@ Napi::Value MT4TradesWrap::Execute(const Napi::CallbackInfo &info)
         TradeRequest request = FromNapiTrade(info[0]);
         const int orderId = trades_->Execute(request);
 
+        if (orderId == 0)
+        {
+            return Napi::Boolean::New(env, true);
+        }
+
         const TradeRecord trade = trades_->Get(orderId);
         return ToNapiTrade(env, trade);
     }

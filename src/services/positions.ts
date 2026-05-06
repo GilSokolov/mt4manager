@@ -60,10 +60,11 @@ export class Positions extends EventEmitter {
     });
   }
 
-  cancel(id: number) {
+  cancel(id: number, cmd: TradeCommand) {
     return this.native.execute({
       mode: TradeExecutionMode.Delete,
       id,
+      cmd,
     });
   }
 
@@ -75,7 +76,7 @@ export class Positions extends EventEmitter {
     });
   }
 
-  closeAll(login: number, symbol: string) {
+  async closeMultipleBy(login: number, symbol: string): Promise<boolean> {
     return this.native.execute({
       mode: TradeExecutionMode.CloseAll,
       symbol,
@@ -96,7 +97,7 @@ export class Positions extends EventEmitter {
     });
   }
 
-  modifyCommnet(id: string, comment: string) {
+  modifyComment(id: string, comment: string) {
     return this.native.execute({
       mode: TradeExecutionMode.ModifyComment,
       id,
