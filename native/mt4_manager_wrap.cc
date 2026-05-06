@@ -2,8 +2,6 @@
 
 #include <string>
 
-#include "async_job.h"
-
 #include "pumping_options_napi.h"
 
 #include "mt4_client_config.h"
