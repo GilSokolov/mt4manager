@@ -2,6 +2,7 @@ import { EventEmitter } from "node:events";
 import { Listener } from "../types";
 import { TradeCommand, TradeRecord, EventTypeName } from "../types";
 import { TradeExecutionMode, TradeRequest } from "../types/trade-request";
+import { resolveExpiration } from "../utils/resolve-expiration";
 
 type TradeRecordListener = Listener<TradeRecord>;
 
@@ -56,6 +57,50 @@ export class Positions extends EventEmitter {
       volume: input.volume,
       deviation: input.deviation || 0,
       price: input.price,
+    });
+  }
+
+  cancel(id: number) {
+    return this.native.execute({
+      mode: TradeExecutionMode.Delete,
+      id,
+    });
+  }
+
+  closeBy(id: number, targetId: number) {
+    return this.native.execute({
+      mode: TradeExecutionMode.CloseBy,
+      id,
+      login: targetId,
+    });
+  }
+
+  closeAll(login: number, symbol: string) {
+    return this.native.execute({
+      mode: TradeExecutionMode.CloseAll,
+      symbol,
+      login,
+    });
+  }
+
+  modify(
+    input: Pick<TradeRequest, "id" | "tp" | "sl" | "price" | "expiration">,
+  ) {
+    return this.native.execute({
+      mode: TradeExecutionMode.Modify,
+      id: input.id,
+      tp: input.tp,
+      sl: input.sl,
+      price: input.price,
+      expiration: resolveExpiration("optional", input.expiration),
+    });
+  }
+
+  modifyCommnet(id: string, comment: string) {
+    return this.native.execute({
+      mode: TradeExecutionMode.ModifyComment,
+      id,
+      comment,
     });
   }
 
@@ -116,9 +161,7 @@ function normalizeOpenTrade(input: TradeRequest, mode: TradeExecutionMode) {
 
   return {
     ...input,
-    expiration: input.expiration
-      ? Math.floor(input.expiration.getTime() / 1000)
-      : 0,
+    expiration: resolveExpiration("optional", input.expiration),
     deviation: input.deviation ?? 0,
     comment: input.comment ?? "",
     flags: input.flags ?? 0,
