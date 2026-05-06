@@ -194,3 +194,34 @@ void MT4Users::HandleTradeUpdate(int login)
 
     HandleUserUpdate(TRANS_UPDATE, &user);
 }
+
+MarginLevel MT4Users::GetMargin(int login) const
+{
+    if (!client_)
+    {
+        MT4_ERROR_LOG("MT4Users.GetMargin failed: client is not initialized");
+        throw std::runtime_error("MT4 client is not initialized");
+    }
+
+    CManagerInterface *manager = client_->Manager();
+    if (!manager)
+    {
+        MT4_ERROR_LOG("MT4Users.GetMargin failed: manager is not initialized");
+        throw std::runtime_error("MT4 manager is not initialized");
+    }
+
+    MT4_DEBUG_LOG("MT4Users.GetMargin begin login=" << login);
+
+    UserRecord user{};
+    int user_result = manager->UserRecordGet(login, &user);
+
+    MT4_DEBUG_LOG("UserRecordGet returned code=" << user_result);
+
+    ThrowMt4Error("UserRecordGet", user_result, manager);
+
+    MarginLevel margin{};
+    int margin_result = manager->MarginLevelGet(login, user.group, &margin);
+    ThrowMt4Error("MarginLevelGet", margin_result, manager);
+
+    return margin;
+}

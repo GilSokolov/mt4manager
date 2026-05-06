@@ -10,6 +10,25 @@ std::vector<napi_value> BuildUserArgs(
         Napi::Number::New(env, payload.type)};
 }
 
+Napi::Object ToNapiMarginLevel(Napi::Env env, const MarginLevel &margin)
+{
+    Napi::Object obj = Napi::Object::New(env);
+
+    obj.Set("login", margin.login);
+    obj.Set("group", std::string(margin.group));
+    obj.Set("leverage", margin.leverage);
+    obj.Set("balance", margin.balance);
+    obj.Set("equity", margin.equity);
+    obj.Set("volume", margin.volume);
+    obj.Set("margin", margin.margin);
+    obj.Set("marginFree", margin.margin_free);
+    obj.Set("marginLevel", margin.margin_level);
+    obj.Set("marginType", margin.margin_type);
+    obj.Set("levelType", margin.level_type);
+
+    return obj;
+}
+
 Napi::Object ToNapiUser(Napi::Env env, const UserRecord &user)
 {
     Napi::Object obj = Napi::Object::New(env);

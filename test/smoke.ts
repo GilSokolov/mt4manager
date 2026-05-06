@@ -13,9 +13,12 @@ async function main() {
     // logLevel: 3,
   });
 
-  await manager.symbols.subscribe("EURUSD.");
+  await manager.symbols.subscribe("EURJPY.");
 
-  manager.users.on("update", console.log);
+  manager.positions.watch(1821026789, (trade) => {
+    const marginLevel = manager.users.getMarginLevelSync(trade.login);
+    console.log(marginLevel);
+  });
 
   const done = new Promise<void>((resolve) => {
     setTimeout(() => {

@@ -8,6 +8,8 @@ Napi::Object ToNapiUser(Napi::Env env, const UserRecord &user);
 
 UserRecord FromNapiUser(Napi::Env env, const Napi::Object &obj);
 
+Napi::Object ToNapiMarginLevel(Napi::Env env, const MarginLevel &margin);
+
 void ApplyNapiUserPatch(
     Napi::Env env,
     const Napi::Object &obj,

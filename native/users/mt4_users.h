@@ -25,6 +25,7 @@ public:
     int Create(UserRecord &user) const;
     void Update(const UserRecord &user) const;
     void HandleTradeUpdate(int login);
+    MarginLevel GetMargin(int login) const;
 
 private:
     explicit MT4Users(const std::shared_ptr<MT4Client> &client);

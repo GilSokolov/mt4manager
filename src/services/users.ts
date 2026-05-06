@@ -3,6 +3,7 @@ import { EventTypeName } from "../types";
 import { Listener } from "../types/manager";
 import {
   CreateUserInput,
+  MarginLevel,
   NativeUsersApi,
   UpdateUserInput,
   User,
@@ -21,6 +22,10 @@ export class Users extends EventEmitter {
         this.dispatchWatch(user);
       }
     });
+  }
+
+  getMarginLevelSync(login: number): MarginLevel {
+    return this.native.getMarginLevelSync(login);
   }
 
   handleTradeUpdate(login: number) {

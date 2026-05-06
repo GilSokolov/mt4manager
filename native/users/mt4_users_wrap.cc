@@ -18,6 +18,7 @@ Napi::Function MT4UsersWrap::Init(Napi::Env env)
         "MT4Users",
         {
             InstanceMethod("get", &MT4UsersWrap::Get),
+            InstanceMethod("getMarginLevelSync", &MT4UsersWrap::GetMargin),
             InstanceMethod("create", &MT4UsersWrap::Create),
             InstanceMethod("update", &MT4UsersWrap::Update),
             InstanceMethod("_setUpdateHandler", &MT4UsersWrap::SetHandler),
@@ -80,6 +81,26 @@ Napi::Value MT4UsersWrap::Get(const Napi::CallbackInfo &info)
         const int login = napi_utils::GetInt32(info, 0, "login");
         const UserRecord user = users_->Get(login);
         return ToNapiUser(env, user);
+    }
+    catch (const MT4Error &ex)
+    {
+        return napi_utils::ThrowError(env, ex);
+    }
+    catch (const std::exception &ex)
+    {
+        return napi_utils::ThrowError(env, ex);
+    }
+}
+
+Napi::Value MT4UsersWrap::GetMargin(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+
+    try
+    {
+        const int login = napi_utils::GetInt32(info, 0, "login");
+        const MarginLevel margin = users_->GetMargin(login);
+        return ToNapiMarginLevel(env, margin);
     }
     catch (const MT4Error &ex)
     {

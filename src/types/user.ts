@@ -61,6 +61,24 @@ export interface User {
   apiData: string;
 }
 
+export type MarginType = "PERCENT" | "CURRENCY" | "UNKNOWN";
+
+export type MarginLevelType = "OK" | "MARGIN_CALL" | "STOPOUT" | "UNKNOWN";
+
+export interface MarginLevel {
+  login: number;
+  group: string;
+  leverage: number;
+  balance: number;
+  equity: number;
+  volume: number;
+  margin: number;
+  marginFree: number;
+  marginLevel: number;
+  marginType: MarginType;
+  levelType: MarginLevelType;
+}
+
 export type CreateUserInput = Partial<User> & Pick<User, "group">;
 
 export type UpdateUserInput = Partial<Omit<User, "login">>;
@@ -73,6 +91,7 @@ export interface ChangeUserPasswordInput {
 
 export interface NativeUsersApi {
   get(login: number): Promise<User>;
+  getMarginLevelSync(login: number): MarginLevel;
   create(input: CreateUserInput): Promise<User>;
   update(login: number, input: UpdateUserInput): Promise<User>;
   handleTradeUpdate(login: number): void;

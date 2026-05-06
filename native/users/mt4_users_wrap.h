@@ -26,6 +26,7 @@ private:
     static Napi::FunctionReference constructor;
 
     Napi::Value Get(const Napi::CallbackInfo &info);
+    Napi::Value GetMargin(const Napi::CallbackInfo &info);
     Napi::Value Create(const Napi::CallbackInfo &info);
     Napi::Value Update(const Napi::CallbackInfo &info);
     Napi::Value SetHandler(const Napi::CallbackInfo &info);
