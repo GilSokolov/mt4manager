@@ -1,0 +1,7 @@
+BasedOnStyle: Google
+LambdaBodyIndentation: OuterScope
+AllowShortLambdasOnASingleLine: None
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: false
+  BeforeLambdaBody: true
