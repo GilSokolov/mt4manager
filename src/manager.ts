@@ -1,4 +1,4 @@
-import { Positions } from "./services/positions";
+/*import { Positions } from "./services/positions";
 import { Symbols } from "./services/symbols";
 import { Transactions } from "./services/transactions";
 import { Users } from "./services/users";
@@ -126,3 +126,5 @@ function normalizePumpingOptions(
     users: options.users ?? true,
   };
 }
+*/
+export { MT4Manager } from "./client/MT4Manager";

@@ -1,10 +1,9 @@
 import { EventEmitter } from "node:events";
 import { EventTypeName } from "../types";
-import { Listener } from "../types/manager";
+import { Listener, NativeUsersApi } from "../types/manager";
 import {
   CreateUserInput,
   MarginLevel,
-  NativeUsersApi,
   UpdateUserInput,
   User,
 } from "../types/user";
@@ -15,7 +14,7 @@ type UserListener = Listener<User>;
 export class Users extends EventEmitter {
   constructor(private readonly native: NativeUsersApi) {
     super();
-    this.native._setUpdateHandler((user, type) => {
+    this.native.onEvent((user, type) => {
       const event = toEventType(type);
       if (event !== "unknown") {
         this.emit(event, user);
@@ -25,7 +24,7 @@ export class Users extends EventEmitter {
   }
 
   getMarginLevelSync(login: number): MarginLevel {
-    return this.native.getMarginLevelSync(login);
+    return this.native.getMarginLevel(login);
   }
 
   handleTradeUpdate(login: number) {

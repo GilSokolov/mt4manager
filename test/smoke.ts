@@ -15,8 +15,8 @@ async function main() {
 
   await manager.symbols.subscribe("EURJPY.");
 
-  manager.positions.watch(1821026789, (trade) => {
-    const marginLevel = manager.users.getMarginLevelSync(trade.login);
+  manager.positions.watch(1821026789, async (trade) => {
+    const marginLevel = await manager.users.getMarginLevel(trade.login);
     console.log(marginLevel);
   });
 

@@ -88,13 +88,3 @@ export interface ChangeUserPasswordInput {
   password: string;
   investor?: boolean;
 }
-
-export interface NativeUsersApi {
-  get(login: number): Promise<User>;
-  getMarginLevelSync(login: number): MarginLevel;
-  create(input: CreateUserInput): Promise<User>;
-  update(login: number, input: UpdateUserInput): Promise<User>;
-  handleTradeUpdate(login: number): void;
-
-  _setUpdateHandler(handler: (user: User, type: EventType) => void): void;
-}

@@ -46,6 +46,5 @@ export interface NativeSymbolsApi {
   getAll(): Promise<MT4SymbolConfig[]>;
   subscribe(symbol: string): Promise<void>;
   unsubscribe(symbol: string): Promise<void>;
-
-  _setTickHandler(handler: (user: Tick) => void): void;
+  onEvent(handler: (tick: Tick) => void): void;
 }

@@ -37,7 +37,7 @@ export interface TradeRequest {
   deviation?: number;
   comment?: string;
 
-  expiration?: Date;
+  expiration?: Date | number;
 
   // optional meta
   flags?: TradeRequestFlags;

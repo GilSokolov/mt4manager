@@ -167,3 +167,70 @@ test("positions.closeMultipleBy closes opposite positions", async () => {
   assert.ok(buy.id > 0);
   assert.ok(sell.id > 0);
 });
+
+test("trades emits pumped updates to js", async () => {
+  try {
+    const manager = await createMT4Manager({ ...config });
+
+    const pump = await createMT4Manager({ ...config });
+
+    let receivedOpen: any = null;
+    let receivedClose: any = null;
+
+    const doneOpen = new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error("Timed out waiting for pumped trade update"));
+      }, 30000);
+
+      pump.positions.once("add", (trade) => {
+        clearTimeout(timeout);
+        receivedOpen = trade;
+        resolve();
+      });
+    });
+
+    const doneClose = new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error("Timed out waiting for pumped trade update"));
+      }, 30000);
+
+      pump.positions.once("delete", (trade) => {
+        clearTimeout(timeout);
+        receivedOpen = trade;
+        resolve();
+      });
+    });
+
+    await pump.startPumping();
+
+    const trade = await manager.positions.open({
+      login: config.userLogin,
+      symbol: "EURUSD.",
+      cmd: TradeCommand.Buy,
+      volume: 1, // 0.01 lot in MT4 units
+      comment: "node-test-open-position",
+      price: 1.17,
+    });
+
+    await doneOpen;
+
+    await manager.positions.close({
+      id: trade.id,
+      volume: trade.volume,
+      price: trade.openPrice,
+    });
+
+    await doneClose;
+
+    assert.ok(receivedOpen);
+    assert.equal(typeof receivedOpen.login, "number");
+
+    assert.ok(receivedClose);
+    assert.equal(typeof receivedClose.login, "number");
+
+    await manager.close();
+    await pump.close();
+  } catch (error) {
+    console.log(error);
+  }
+});

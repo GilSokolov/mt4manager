@@ -1,19 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { MT4Manager } from "../src/manager";
 import { config } from "./config";
-
-function makeManager() {
-  return new MT4Manager(config.dllPath);
-}
-
-async function openManager() {
-  const manager = makeManager();
-  await manager.connect(config.server);
-  await manager.login(config.login, config.password);
-  return manager;
-}
+import { createMT4Manager } from "../src";
 
 function uniqueEmail(prefix = "user") {
   return `${prefix}_${Date.now()}_${Math.floor(Math.random() * 100000)}@example.com`;
@@ -24,10 +13,7 @@ function uniqueName(prefix = "Test User") {
 }
 
 test("users.get should return user", async () => {
-  const manager = new MT4Manager(config.dllPath);
-
-  await manager.connect(config.server);
-  await manager.login(config.login, config.password);
+  const manager = await createMT4Manager({ ...config });
 
   const user = await manager.users.get(config.userLogin);
 
@@ -39,19 +25,18 @@ test("users.get should return user", async () => {
   manager.close();
 });
 
-test("users.get should reject invalid login", () => {
-  const manager = new MT4Manager(config.dllPath);
+test("users.get should return null on invalid login", async () => {
+  const manager = await createMT4Manager({ ...config });
 
-  assert.throws(() => manager.users.get(0), {
-    name: "TypeError",
-    message: "login must be a positive integer",
-  });
+  const user = await manager.users.get(1);
+
+  assert.strictEqual(user, null);
 
   manager.close();
 });
 
 test("users.create validates arguments", async (t) => {
-  const manager = await openManager();
+  const manager = await createMT4Manager({ ...config });
 
   t.after(() => {
     manager.close();
@@ -69,7 +54,7 @@ test("users.create validates arguments", async (t) => {
 });
 
 test("users.update validates arguments", async (t) => {
-  const manager = await openManager();
+  const manager = await createMT4Manager({ ...config });
 
   t.after(() => {
     manager.close();
@@ -97,7 +82,7 @@ test("users.update validates arguments", async (t) => {
 });
 
 test("users.create creates a new user and returns login", async (t) => {
-  const manager = await openManager();
+  const manager = await createMT4Manager({ ...config });
 
   t.after(() => {
     manager.close();
@@ -129,7 +114,7 @@ test("users.create creates a new user and returns login", async (t) => {
 });
 
 test("users.update updates an existing user", async (t) => {
-  const manager = await openManager();
+  const manager = await createMT4Manager({ ...config });
 
   t.after(() => {
     manager.close();
@@ -167,4 +152,41 @@ test("users.update updates an existing user", async (t) => {
   assert.equal(user.email, updatedEmail);
   assert.equal(user.group, group);
   assert.equal(user.leverage, 200);
+});
+
+test("users emits pumped updates to js", async () => {
+  try {
+    const manager = await createMT4Manager({ ...config });
+    const pump = await createMT4Manager({ ...config });
+
+    let received: any = null;
+
+    const done = new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error("Timed out waiting for pumped user update"));
+      }, 30000);
+
+      pump.users.once("update", (user) => {
+        clearTimeout(timeout);
+        received = user;
+        resolve();
+      });
+    });
+
+    await pump.startPumping();
+
+    await manager.users.update(config.userLogin, {
+      name: Math.random().toFixed(5),
+    });
+
+    await done;
+
+    assert.ok(received);
+    assert.equal(typeof received.login, "number");
+
+    await manager.close();
+    await pump.close();
+  } catch (error) {
+    console.log(error);
+  }
 });

@@ -1,4 +1,4 @@
-import { MT4Manager } from "./manager";
+import { MT4Manager } from "./client/MT4Manager";
 import type { MT4ManagerFactoryConfig } from "./types";
 
 export async function createMT4Manager(config: MT4ManagerFactoryConfig) {

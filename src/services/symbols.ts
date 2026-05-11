@@ -7,7 +7,7 @@ type SymbolListener = Listener<Tick>;
 export class Symbols extends EventEmitter {
   constructor(private readonly native: NativeSymbolsApi) {
     super();
-    this.native._setTickHandler((symbol) => {
+    this.native.onEvent((symbol) => {
       this.emit("tick", symbol);
       this.dispatchWatch(symbol);
     });
