@@ -5,7 +5,7 @@ import { createMT4Manager } from "../src";
 import { config } from "./config";
 
 test("symbols.get returns normalized symbol info", async () => {
-  const manager = await createMT4Manager({
+  const pump = await createMT4Manager({
     dllPath: config.dllPath,
     server: config.server,
     login: config.login,
@@ -13,19 +13,26 @@ test("symbols.get returns normalized symbol info", async () => {
     pump: {
       ticks: true,
     },
-    logLevel: 3,
   });
 
+  await pump.symbols.subscribe("EURUSD.");
+
   try {
-    const done = new Promise<void>((resolve) => {
-      setTimeout(() => {
+    const done = new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error("Timed out waiting for pumped user update"));
+      }, 30000);
+
+      pump.symbols.watch("EURUSD.", () => {
+        clearTimeout(timeout);
+
         resolve();
-      }, 6000);
+      });
     });
 
     await done;
 
-    const symbol = await manager.symbols.get("EURUSD.");
+    const symbol = await pump.symbols.get("EURUSD.");
 
     assert.equal(symbol.symbol, "EURUSD.");
     assert.equal(typeof symbol.digits, "number");
@@ -37,7 +44,7 @@ test("symbols.get returns normalized symbol info", async () => {
     assert.equal(typeof symbol.bid, "number");
     assert.equal(typeof symbol.ask, "number");
   } finally {
-    await manager.close();
+    await pump.close();
   }
 });
 
@@ -50,7 +57,6 @@ test("symbols.getAll returns symbol configs", async () => {
     pump: {
       ticks: true,
     },
-    logLevel: 3,
   });
 
   try {

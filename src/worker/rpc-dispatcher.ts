@@ -29,7 +29,7 @@ export async function dispatchRpc(
     // -------------------------------------------------
 
     case "symbols.get":
-      return manager.symbols.get(params.login);
+      return manager.symbols.get(params.symbol);
 
     case "symbols.getAll":
       return manager.symbols.getAll();

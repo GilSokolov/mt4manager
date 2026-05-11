@@ -37,7 +37,7 @@
     "build:native": "node-gyp rebuild",
     "build": "npm run build:ts && npm run build:native",
     "rebuild": "npm run clean && npm run build",
-    "test": "npm run build:ts && node --test dist/test/**/*.test.js",
+    "test": "npm run build:ts && node dist/test/run-tests.js",
     "pack:check": "npm pack --dry-run",
     "prepublishOnly": "npm run build && node scripts/verify-package.js"
   },

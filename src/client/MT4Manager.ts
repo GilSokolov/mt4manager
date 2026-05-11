@@ -12,6 +12,7 @@ import { ManagerConfig, PumpingOptions } from "../types/manager";
 
 import { normalizePumpingOptions } from "../utils/normalize-pumping-options";
 import path from "node:path";
+import fs from "node:fs";
 
 const workerPath = path.resolve(__dirname, "../worker/mt4.worker.js");
 
@@ -30,11 +31,10 @@ export class MT4Manager extends EventEmitter {
   constructor(dllPath: string);
 
   constructor(options: string | ManagerConfig) {
-    const config = typeof options === "string" ? { dllPath: options } : options;
     super();
 
     const workerThread = new Worker(workerPath, {
-      workerData: { config },
+      workerData: { config: this.normalizeConfig(options) },
     });
 
     this.worker = new WorkerClient(workerThread);
@@ -152,5 +152,27 @@ export class MT4Manager extends EventEmitter {
     this.worker.on("exit", (code) => {
       this.emit("exit", code);
     });
+  }
+
+  private normalizeConfig(options: string | ManagerConfig): ManagerConfig {
+    if (!options) {
+      throw new TypeError("Config is missing");
+    }
+
+    const config = typeof options === "string" ? { dllPath: options } : options;
+
+    if (!config.dllPath) {
+      throw new TypeError("Expected string: dllPath");
+    }
+
+    if (!config.dllPath.trim()) {
+      throw new TypeError("Expected non-empty string: dllPath");
+    }
+
+    if (!fs.existsSync(config.dllPath)) {
+      throw new Error("MT4 DLL path does not exist");
+    }
+
+    return config;
   }
 }

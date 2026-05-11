@@ -3,7 +3,7 @@ import { WorkerClient } from "../worker-client";
 import { EventTypeName, MT4Symbol, MT4SymbolConfig, Tick } from "../../types";
 import { Client } from "../client";
 
-export class SymbolsClient extends Client<Tick, EventTypeName, "symbol"> {
+export class SymbolsClient extends Client<Tick, "tick", "symbol"> {
   constructor(worker: WorkerClient) {
     super("symbol", "symbols", worker);
   }

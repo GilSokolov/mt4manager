@@ -37,10 +37,11 @@ test("connect after close should fail", async () => {
   const manager = createManager();
 
   try {
-    manager.close();
-    await assert.rejects(() => manager.connect(config.server));
+    await manager.close();
+
+    await assert.rejects(manager.connect(config.server), /closed/i);
   } finally {
-    manager.close();
+    await manager.close().catch(() => {});
   }
 });
 

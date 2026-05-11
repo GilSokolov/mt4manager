@@ -11,7 +11,7 @@ const PRICE = 1.17;
 const VOLUME = 1;
 
 test("positions.open opens a market position", async () => {
-  const manager = await createMT4Manager({ ...config, logLevel: 3 });
+  const manager = await createMT4Manager({ ...config });
 
   const trade = await manager.positions.open({
     login: config.userLogin,
@@ -41,7 +41,7 @@ test("positions.open opens a market position", async () => {
 });
 
 test("positions.modify modifies an open position", async () => {
-  const manager = await createMT4Manager({ ...config, logLevel: 3 });
+  const manager = await createMT4Manager({ ...config });
 
   const trade = await manager.positions.open({
     login: config.userLogin,
@@ -69,7 +69,7 @@ test("positions.modify modifies an open position", async () => {
 });
 
 test("positions.modifyComment modifies position comment", async () => {
-  const manager = await createMT4Manager({ ...config, logLevel: 3 });
+  const manager = await createMT4Manager({ ...config });
 
   const trade = await manager.positions.open({
     login: config.userLogin,
@@ -95,7 +95,7 @@ test("positions.modifyComment modifies position comment", async () => {
 });
 
 test("positions.cancel cancels a pending position", async () => {
-  const manager = await createMT4Manager({ ...config, logLevel: 3 });
+  const manager = await createMT4Manager({ ...config });
 
   const pending = await manager.positions.open({
     login: config.userLogin,
@@ -112,7 +112,7 @@ test("positions.cancel cancels a pending position", async () => {
 });
 
 test("positions.closeBy closes opposite positions by ticket", async () => {
-  const manager = await createMT4Manager({ ...config, logLevel: 3 });
+  const manager = await createMT4Manager({ ...config });
 
   const buy = await manager.positions.open({
     login: config.userLogin,
@@ -138,7 +138,7 @@ test("positions.closeBy closes opposite positions by ticket", async () => {
 });
 
 test("positions.closeMultipleBy closes opposite positions", async () => {
-  const manager = await createMT4Manager({ ...config, logLevel: 3 });
+  const manager = await createMT4Manager({ ...config });
 
   const buy = await manager.positions.open({
     login: config.userLogin,
@@ -196,7 +196,7 @@ test("trades emits pumped updates to js", async () => {
 
       pump.positions.once("delete", (trade) => {
         clearTimeout(timeout);
-        receivedOpen = trade;
+        receivedClose = trade;
         resolve();
       });
     });

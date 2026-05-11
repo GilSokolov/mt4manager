@@ -3,7 +3,7 @@ import { config } from "./config";
 
 async function main() {
   const manager = await createMT4Manager({
-    dllPath: config.dllPath,
+    dllPath: config.dllPath + "asfsdfd",
     server: config.server,
     login: config.login,
     password: config.password,
@@ -13,20 +13,7 @@ async function main() {
     // logLevel: 3,
   });
 
-  await manager.symbols.subscribe("EURJPY.");
 
-  manager.positions.watch(1821026789, async (trade) => {
-    const marginLevel = await manager.users.getMarginLevel(trade.login);
-    console.log(marginLevel);
-  });
-
-  const done = new Promise<void>((resolve) => {
-    setTimeout(() => {
-      resolve();
-    }, 60000);
-  });
-
-  await done;
 }
 
 main().catch((error) => {
