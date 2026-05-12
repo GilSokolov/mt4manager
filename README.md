@@ -51,30 +51,14 @@ npm install mt4manager
 
 ### Operating System
 
-- Windows
+- Windows x64
 
 ### Runtime
 
 - Node.js `>=20`
 - Recommended: Node.js `22`
 
-### Build Tools
-
-Because this package uses native bindings:
-
-- Visual Studio Build Tools
-- `node-gyp`
-- Python (required by `node-gyp`)
-
-Recommended setup:
-
-```bash
-npm install -g node-gyp
-```
-
----
-
-## MetaTrader Manager DLL
+### MetaTrader Manager DLL
 
 This package does **not** include:
 
@@ -90,6 +74,25 @@ Example:
 ```
 
 ---
+
+## Development Requirements
+
+Building the native addon from source requires:
+
+- Windows
+- Node.js >= 20
+- Python 3
+- Visual Studio 2022 Build Tools
+  - Desktop development with C++
+  - MSVC v143 toolset
+  - Windows SDK
+- node-gyp
+
+Install node-gyp:
+
+```bash
+npm install -g node-gyp
+```
 
 ## Quick Start
 
@@ -109,15 +112,18 @@ manager.users.on("update", (user) => {
   console.log("User updated:", user);
 });
 
-// get user
-const user = await manager.users.get(123456);
+try {
+  // get user
+  const user = await manager.users.get(123456);
 
-// update user
-await manager.users.update(123456, {
-  name: "New Name",
-});
-
-await manager.close();
+  // update user
+  await manager.users.update(123456, {
+    name: "New Name",
+  });
+} finally {
+  // cleanup
+  await manager.close();
+}
 ```
 
 ---
@@ -233,8 +239,6 @@ const tx = await manager.transactions.creditOut({
 ```ts
 const tx = await manager.transactions.get(100000);
 ```
-
----
 
 ---
 
@@ -367,6 +371,9 @@ Real-time updates are automatically emitted through module event handlers.
 
 # Environment Variables
 
+Only needed for local development and tests.
+Consumers can pass config directly in code.
+
 Example `.env`:
 
 ```env
@@ -374,7 +381,7 @@ MT4_SERVER=server.com:443
 MT4_LOGIN=9707
 MT4_PASSWORD=abc123
 MT4_DLL_PATH=./dll/mtmanapi64.dll
-MT4_USER_LOGIN=1821026789
+MT4_USER_LOGIN=100010
 MT4_TEST_GROUP=demotest
 ```
 
