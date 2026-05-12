@@ -143,6 +143,8 @@ export class WorkerClient extends EventEmitter {
   // ---------------------------------------------------------
 
   async terminate(): Promise<number> {
+    this.removeAllListeners();
+
     this.rejectAll(
       Object.assign(new Error("Worker terminated"), {
         code: "WORKER_TERMINATED",

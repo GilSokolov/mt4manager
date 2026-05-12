@@ -78,8 +78,13 @@ export class MT4Manager extends EventEmitter {
     await this.worker.call("manager.close");
 
     this.users.unwatchAll();
+    this.positions.unwatchAll();
+    this.symbols.unwatchAll();
+    this.transactions.unwatchAll();
 
     this.removeAllListeners();
+
+    await this.worker.terminate();
   }
 
   // ---------------------------------------------------------

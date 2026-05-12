@@ -3,7 +3,7 @@ import { config } from "./config";
 
 async function main() {
   const manager = await createMT4Manager({
-    dllPath: config.dllPath + "asfsdfd",
+    dllPath: config.dllPath,
     server: config.server,
     login: config.login,
     password: config.password,
@@ -13,7 +13,7 @@ async function main() {
     // logLevel: 3,
   });
 
-
+  manager.close();
 }
 
 main().catch((error) => {
