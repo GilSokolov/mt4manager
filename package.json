@@ -9,22 +9,22 @@
     "node-addon",
     "napi"
   ],
-  "homepage": "https://github.com/your-org/mt4manager",
+  "homepage": "https://github.com/GilSokolov/mt4manager",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-org/mt4manager.git"
+    "url": "git+https://github.com/GilSokolov/mt4manager.git"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "license": "MIT",
-  "author": "Your Name",
+  "author": "Gil Sokolov",
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
     "build/Release/*.node",
-    "binding.gyp",
-    "include",
-    "native",
     "README.md",
     "LICENSE"
   ],
@@ -43,13 +43,13 @@
   },
   "dependencies": {
     "bindings": "^1.5.0",
-    "dotenv": "^17.4.2",
     "node-addon-api": "^8.3.1"
   },
   "devDependencies": {
     "@types/node": "^22.19.17",
     "node-gyp": "^11.2.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "dotenv": "^17.4.2"
   },
   "gypfile": true
 }
