@@ -47,9 +47,9 @@
   },
   "devDependencies": {
     "@types/node": "^22.19.17",
+    "dotenv": "^17.4.2",
     "node-gyp": "^11.2.0",
-    "typescript": "^5.8.3",
-    "dotenv": "^17.4.2"
+    "typescript": "^5.8.3"
   },
   "gypfile": true
 }
