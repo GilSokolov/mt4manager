@@ -39,7 +39,8 @@
     "rebuild": "npm run clean && npm run build",
     "test": "npm run build:ts && node dist/test/run-tests.js",
     "pack:check": "npm pack --dry-run",
-    "prepublishOnly": "npm run build && node scripts/verify-package.js"
+    "prepublishOnly": "npm run build && node scripts/verify-package.js",
+    "install": "node -e \"console.log('mt4manager: using prebuilt binary')\""
   },
   "dependencies": {
     "bindings": "^1.5.0",
