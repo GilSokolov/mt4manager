@@ -1,6 +1,6 @@
 {
   "name": "mt4manager",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Node.js native addon starter for MetaTrader 4 Manager API",
   "keywords": [
     "mt4",
