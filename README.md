@@ -1,45 +1,118 @@
 # mt4manager
 
-Starter repository for a Node.js native addon around the MetaTrader 4 Manager API.
+TypeScript-friendly Node.js bindings for the MetaTrader 4 Manager API.
 
-## Scope of v0.1.0
+`mt4manager` lets you use the MT4 Manager API from JavaScript/TypeScript without writing C++ directly.
 
-This starter is intentionally minimal. It gives you:
+Built as a native Node.js addon using Node-API (`node-addon-api`), it provides a modern async API for brokerages, internal tools, and MT4 infrastructure services.
 
-- Node-API / `node-addon-api` based native addon
-- runtime DLL path loading
-- one native client per JS instance
-- async `connect`, `login`, `disconnect`, `close`
-- per-instance mutex protection
-- split TS structure with `services` and `utils`
-- placeholders for `users`, `trades`, and `pumping`
-- GitHub Actions for CI and publish
+---
 
-## Important
+## Features
 
-- This package is designed for **Windows-focused MT4 usage**.
-- You should review the licensing terms for `mtmanapi.dll` / `mtmanapi64.dll` before redistribution.
-- The package is structured so users can pass their own DLL path at runtime.
+- Native Node.js addon powered by Node-API
+- TypeScript-first developer experience
+- Runtime DLL loading (`mtmanapi64.dll`)
+- Async MT4 connection lifecycle
+- Real-time pumping/event updates
+- User management
+- Symbol management
+- Transactions API
+- Positions API
+- Event subscriptions
+- One MT4 native client per manager instance
+- Windows-focused MT4 integration
 
-## Planned JS API
+---
+
+## Status
+
+> Beta — APIs may change before `v1.0.0`.
+
+This project is actively under development and intended for:
+
+- brokerages
+- prop firms
+- internal tooling
+- automation systems
+- MT4 infrastructure services
+
+---
+
+## Installation
+
+```bash
+npm install mt4manager
+```
+
+---
+
+## Requirements
+
+### Operating System
+
+- Windows
+
+### Runtime
+
+- Node.js `>=20`
+- Recommended: Node.js `22`
+
+### Build Tools
+
+Because this package uses native bindings:
+
+- Visual Studio Build Tools
+- `node-gyp`
+- Python (required by `node-gyp`)
+
+Recommended setup:
+
+```bash
+npm install -g node-gyp
+```
+
+---
+
+## MetaTrader Manager DLL
+
+This package does **not** include:
+
+- `mtmanapi.dll`
+- `mtmanapi64.dll`
+
+You must provide your own licensed MT4 Manager API DLL.
+
+Example:
+
+```txt
+./dll/mtmanapi64.dll
+```
+
+---
+
+## Quick Start
 
 ```ts
 import { createMT4Manager } from "mt4manager";
 
 const manager = await createMT4Manager({
-  dllPath: ".../mtmanapi64.dll",
-  server: "your.server:443",
-  login: 123456,
+  dllPath: "./dll/mtmanapi64.dll",
+  server: "server.com:443",
+  login: 9707,
   password: "password",
   pump: true,
 });
 
-// listen to updates
+// listen for user updates
 manager.users.on("update", (user) => {
   console.log("User updated:", user);
 });
 
-// perform action
+// get user
+const user = await manager.users.get(123456);
+
+// update user
 await manager.users.update(123456, {
   name: "New Name",
 });
@@ -47,66 +120,390 @@ await manager.users.update(123456, {
 await manager.close();
 ```
 
-## Repository layout
+---
 
-```txt
-include/MT4ManagerAPI.h      Vendor header
-native/                      C++ addon implementation
-src/manager.ts               Public class wrapper
-src/services/                Future domain services
-src/utils/                   Shared helpers and types
-test/                        Node tests
+# API Overview
+
+## Users
+
+### Get User
+
+```ts
+const user = await manager.users.get(123456);
 ```
 
-## Install
+### Update User
+
+```ts
+await manager.users.update(123456, {
+  name: "Updated Name",
+});
+```
+
+### Create User
+
+```ts
+const user = await manager.users.create({
+  group: "demotest",
+  name: "John Doe",
+  email: "john@example.com",
+});
+```
+
+### User Updates (Pump Events)
+
+```ts
+manager.users.on("update", (user) => {
+  console.log(user);
+});
+```
+
+---
+
+## Symbols
+
+### Get Symbol
+
+```ts
+const symbol = await manager.symbols.get("EURUSD");
+```
+
+### Get All Symbols
+
+```ts
+const symbols = await manager.symbols.getAll();
+```
+
+### Subscribe to Tick Updates
+
+```ts
+await manager.symbols.subscribe("EURUSD");
+
+manager.symbols.watch("EURUSD", (symbol) => {
+  console.log(symbol.bid, symbol.ask);
+});
+```
+
+---
+
+## Transactions
+
+### Deposit
+
+```ts
+const tx = await manager.transactions.deposit({
+  login: 123456,
+  amount: 100,
+  comment: "Initial deposit",
+});
+```
+
+### Withdrawal
+
+```ts
+const tx = await manager.transactions.withdrawal({
+  login: 123456,
+  amount: 50,
+  comment: "Client withdrawal",
+});
+```
+
+### Credit In
+
+```ts
+const tx = await manager.transactions.creditIn({
+  login: 123456,
+  amount: 25,
+  comment: "Bonus credit",
+});
+```
+
+### Credit Out
+
+```ts
+const tx = await manager.transactions.creditOut({
+  login: 123456,
+  amount: 25,
+  comment: "Remove bonus",
+});
+```
+
+### Get Transaction
+
+```ts
+const tx = await manager.transactions.get(100000);
+```
+
+---
+
+---
+
+## Positions
+
+### Open Market Position
+
+```ts
+import { TradeCommand } from "mt4manager";
+
+const trade = await manager.positions.open({
+  login: 123456,
+  symbol: "EURUSD",
+  cmd: TradeCommand.Buy,
+  volume: 1,
+  comment: "open-position",
+  price: 1.17,
+});
+```
+
+### Close Position
+
+```ts
+await manager.positions.close({
+  id: trade.id,
+  volume: trade.volume,
+  price: trade.openPrice,
+});
+```
+
+### Modify Position
+
+```ts
+await manager.positions.modify({
+  id: trade.id,
+  sl: 1.1,
+  tp: 1.2,
+  price: 1.17,
+});
+```
+
+### Modify Position Comment
+
+```ts
+await manager.positions.modifyComment(trade.id, "updated-comment");
+```
+
+### Open Pending Order
+
+```ts
+const pending = await manager.positions.open({
+  login: 123456,
+  symbol: "EURUSD",
+  cmd: TradeCommand.BuyLimit,
+  volume: 1,
+  comment: "buy-limit",
+  price: 1.0,
+});
+```
+
+### Cancel Pending Order
+
+```ts
+await manager.positions.cancel(pending.id, pending.cmd);
+```
+
+### Close Opposite Positions By Ticket
+
+```ts
+const buy = await manager.positions.open({
+  login: 123456,
+  symbol: "EURUSD",
+  cmd: TradeCommand.Buy,
+  volume: 1,
+  price: 1.17,
+});
+
+const sell = await manager.positions.open({
+  login: 123456,
+  symbol: "EURUSD",
+  cmd: TradeCommand.Sell,
+  volume: 1,
+  price: 1.17,
+});
+
+await manager.positions.closeBy(buy.id, sell.id);
+```
+
+### Close Multiple Opposite Positions
+
+```ts
+await manager.positions.closeMultipleBy(123456, "EURUSD");
+```
+
+### Listen For Pumped Trade Events
+
+```ts
+manager.positions.on("add", (trade) => {
+  console.log("Position opened:", trade);
+});
+
+manager.positions.on("update", (trade) => {
+  console.log("Position updated:", trade);
+});
+
+manager.positions.on("delete", (trade) => {
+  console.log("Position closed:", trade);
+});
+```
+
+---
+
+# Pumping
+
+Pumping mode enables real-time updates from the MT4 server.
+
+Example:
+
+```ts
+const manager = await createMT4Manager({
+  pump: {
+    ticks: true,
+  },
+});
+```
+
+Real-time updates are automatically emitted through module event handlers.
+
+---
+
+# Environment Variables
+
+Example `.env`:
+
+```env
+MT4_SERVER=server.com:443
+MT4_LOGIN=9707
+MT4_PASSWORD=abc123
+MT4_DLL_PATH=./dll/mtmanapi64.dll
+MT4_USER_LOGIN=1821026789
+MT4_TEST_GROUP=demotest
+```
+
+---
+
+# Development
+
+## Install Dependencies
 
 ```bash
 npm install
-npm run build
 ```
 
-## First local run
-
-1. Place `MT4ManagerAPI.h` in `include/`.
-2. Put your DLL somewhere local, for example `dll/mtmanapi64.dll`.
-3. Replace the stubbed MT4 API integration points in `native/mt4_client.cc` with the real calls from your SDK.
-4. Build:
+## Build
 
 ```bash
 npm run build
 ```
 
-## First GitHub push
+## Rebuild
 
 ```bash
-git init
-git add .
-git commit -m "chore: initialize mt4manager starter"
-git branch -M main
-git remote add origin https://github.com/YOUR_USER/mt4manager.git
-git push -u origin main
+npm run rebuild
 ```
 
-## First npm publish
-
-### Manual publish
+## Run Tests
 
 ```bash
-npm login
-npm pack --dry-run
-npm publish --access public
+npm test
 ```
 
-### Recommended later
+---
 
-Use GitHub Actions with npm trusted publishing after the package is working end-to-end.
+# Project Structure
 
-## Suggested next commits
+```txt
+src/
+native/
+include/
+build/
+dist/
+test/
+```
 
-1. Wire the real MT4 API initialization using `MT4ManagerAPI.h`
-2. Finish `connect`
-3. Finish `login`
-4. Add lifecycle tests
-5. Add `users.get`
-6. Add `trades.get`
-7. Add pumping bridge with `ThreadSafeFunction`
+---
+
+# Native Architecture
+
+`mt4manager` is built using:
+
+- Node-API (`node-addon-api`)
+- C++
+- TypeScript
+- `node-gyp`
+
+The project uses:
+
+- thread-safe JS callback bridges
+- native MT4 client wrappers
+- async-safe event forwarding
+- runtime DLL loading
+- modular MT4 service wrappers
+
+Example native wrapper:
+
+```cpp
+bridge_->CallJs(UserPayload{*user, type}, BuildUserArgs);
+```
+
+This architecture allows MT4 pump events to safely propagate from native C++ threads into JavaScript event handlers.
+
+---
+
+# Important Notes
+
+## MT4 Licensing
+
+Review MetaQuotes licensing terms before deploying or redistributing MT4 Manager API components.
+
+## Live Trading Warning
+
+This package can perform:
+
+- deposits
+- withdrawals
+- credits
+- user modifications
+- position operations
+
+Use carefully on production MT4 servers.
+
+---
+
+# Publishing
+
+Before publishing:
+
+```bash
+npm run clean
+npm run build
+npm test
+npm run pack:check
+npm publish
+```
+
+---
+
+# Current Coverage
+
+- Users
+- Symbols
+- Transactions
+- Positions
+- Pumping/event updates
+- Native async wrappers
+- TypeScript support
+
+---
+
+# License
+
+MIT
+
+---
+
+# Repository
+
+GitHub:
+
+```txt
+https://github.com/GilSokolov/mt4manager
+```
