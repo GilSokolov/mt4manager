@@ -10,10 +10,20 @@ async function main() {
     pump: {
       ticks: true,
     },
-    // logLevel: 3,
+    logLevel: 3,
   });
 
-  manager.close();
+  console.log("[debug] create manager passed");
+
+  console.log("[debug] closing manager");
+
+  try {
+    await manager.close();
+    console.log("[debug] manager closed");
+  } catch (err) {
+    console.error("[debug] close failed:", err);
+    throw err;
+  }
 }
 
 main().catch((error) => {

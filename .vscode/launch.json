@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug smoke.js native crash",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "C:\\Program Files\\nodejs\\node.exe",
+      "args": ["dist/test/smoke.js"],
+      "cwd": "${workspaceFolder}",
+      "stopAtEntry": false
+    }
+  ]
+}
